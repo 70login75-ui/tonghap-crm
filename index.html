@@ -479,8 +479,13 @@
         </div>
         <input type="hidden" id="fPayType" value="계좌이체">
       </div>
-      <div class="field"><label>자동이체 상세 (카드: 카드사/번호/유효기간/카드주 · 계좌: 은행/번호/예금주)</label>
-        <input id="fPayDetail" placeholder="예: 농협 302-... 홍길동">
+      <div class="grid2">
+        <div class="field"><label>자동이체 ① (은행/카드사 · 예금주)</label>
+          <input id="fPayDetail" placeholder="예: 농협 · 홍길동">
+        </div>
+        <div class="field"><label>자동이체 ② (계좌/카드번호 · 유효기간)</label>
+          <input id="fPayDetail2" placeholder="예: 302-0000-0000-00">
+        </div>
       </div>
       <div class="field"><label>사은계좌 (유치자 지급은 미기재)</label>
         <input id="fGiftAccount" placeholder="웨이브넷 지급 시에만 기재">
@@ -1086,6 +1091,7 @@ function openModal(id) {
     document.getElementById('fAddress').value = item.address || '';
     syncChips('fPayType', 'payTypeChips', item.payType || '계좌이체');
     document.getElementById('fPayDetail').value = item.payDetail || '';
+    document.getElementById('fPayDetail2').value = item.payDetail2 || '';
     document.getElementById('fGiftAccount').value = item.giftAccount || '';
 
     syncChips('fCarrier', 'carrierChips', item.carrier || 'SK브로드밴드');
@@ -1108,7 +1114,7 @@ function openModal(id) {
   } else {
     document.getElementById('modalTitle').textContent = '새 고객 등록';
     document.getElementById('editId').value = '';
-    ['fName','fPhone','fFee','fOpenDate','fExpDate','fRrn','fAddress','fPayDetail','fGiftAccount','fPlanName','fMonthlyFee','fInstallWish','fInstallFee','fVoucher','fGift','fEtc','fMemo'].forEach(k => document.getElementById(k).value = '');
+    ['fName','fPhone','fFee','fOpenDate','fExpDate','fRrn','fAddress','fPayDetail','fPayDetail2','fGiftAccount','fPlanName','fMonthlyFee','fInstallWish','fInstallFee','fVoucher','fGift','fEtc','fMemo'].forEach(k => document.getElementById(k).value = '');
     document.getElementById('fTermMonths').value = '36';
     document.getElementById('fStatus').value = '상담중';
     document.getElementById('fSettled').checked = false;
@@ -1146,6 +1152,7 @@ function saveCustomer() {
     address: document.getElementById('fAddress').value.trim(),
     payType: document.getElementById('fPayType').value,
     payDetail: document.getElementById('fPayDetail').value.trim(),
+    payDetail2: document.getElementById('fPayDetail2').value.trim(),
     giftAccount: document.getElementById('fGiftAccount').value.trim(),
     carrier: document.getElementById('fCarrier').value,
     product: document.getElementById('fProduct').value,
@@ -1214,9 +1221,9 @@ function downloadICS(id) {
 
 function exportCSV() {
   const data = loadData();
-  const hdr = ['고객명','연락처','주민번호','설치주소','자동이체방식','자동이체상세','사은계좌','통신사','상품유형','신청상품','약정개월','AP신청','월요금','설치희망일','설치비','상품권','현금사은품(만원)','현금지급처','기타','유심결합수','개통일','약정만료일','상태','수수료(원)','정산여부','사진수','메모'];
+  const hdr = ['고객명','연락처','주민번호','설치주소','자동이체방식','자동이체1','자동이체2','사은계좌','통신사','상품유형','신청상품','약정개월','AP신청','월요금','설치희망일','설치비','상품권','현금사은품(만원)','현금지급처','기타','유심결합수','개통일','약정만료일','상태','수수료(원)','정산여부','사진수','메모'];
   const lines = [hdr.join(',')].concat(data.map(x => [
-    x.name, x.phone, x.rrn, x.address, x.payType, x.payDetail, x.giftAccount,
+    x.name, x.phone, x.rrn, x.address, x.payType, x.payDetail, x.payDetail2, x.giftAccount,
     x.carrier, x.product, x.planName, x.termMonths, x.ap, x.monthlyFee, x.installWish, x.installFee,
     x.voucher, x.gift, x.cashPayer, x.etc, (x.sims||[]).length,
     x.openDate, x.expDate, x.status, x.fee, x.settled ? '완료' : '미정산', (x.photos||[]).length, (x.memo||'').replace(/\n/g,' ')
