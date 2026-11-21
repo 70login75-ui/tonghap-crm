@@ -50,7 +50,7 @@
     display: flex; align-items: center; justify-content: center;
     font-weight: 900; font-size: 16px; color: #0B1120;
   }
-  .brand-txt { font-size: 17px; font-weight: 800; letter-spacing: -0.4px; }
+  .brand-txt { font-size: 20px; font-weight: 900; letter-spacing: -0.4px; }
   .brand-sub { font-size: 12.5px; color: #E2E8F0; font-weight: 800; margin-top: 2px; letter-spacing: -0.2px; }
   .icon-pill {
     background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.16);
@@ -72,7 +72,7 @@
   .kpi .v { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; }
   .kpi.warn .v { color: #FACC15; }
   .kpi.money .v { color: #34D399; font-size: 14px; line-height: 22px; }
-  .kpi .k { font-size: 11px; color: #CBD5E1; margin-top: 2px; font-weight: 600; }
+  .kpi .k { font-size: 12.5px; color: #F1F5F9; margin-top: 3px; font-weight: 800; letter-spacing: -0.2px; }
 
   .wrap { max-width: 640px; margin: 0 auto; padding: 0 14px; }
 
@@ -387,7 +387,7 @@
   <div class="kpi-grid">
     <div class="kpi" onclick="quickFilter('전체')"><div class="v" id="stTotal">0</div><div class="k">전체 고객</div></div>
     <div class="kpi" onclick="quickFilter('상담·접수')"><div class="v" id="stActive">0</div><div class="k">상담·접수</div></div>
-    <div class="kpi warn" onclick="quickFilter('만료임박')"><div class="v" id="stExpiring">0</div><div class="k">만료임박</div></div>
+    <div class="kpi warn" onclick="quickFilter('만료임박')"><div class="v" id="stExpiring">0</div><div class="k">약정임박</div></div>
     <div class="kpi money" onclick="quickFilter('미정산')"><div class="v" id="stFee">0원</div><div class="k">미정산</div></div>
   </div>
 </div>
@@ -403,7 +403,7 @@
   <div class="chips" id="chips">
     <button class="chip active" data-f="전체" onclick="setFilter('전체',this)">전체</button>
     <button class="chip" data-f="상담·접수" onclick="setFilter('상담·접수',this)">상담·접수</button>
-    <button class="chip" data-f="만료임박" onclick="setFilter('만료임박',this)">만료임박(D-90)</button>
+    <button class="chip" data-f="만료임박" onclick="setFilter('만료임박',this)">약정임박(D-90)</button>
     <button class="chip" data-f="개통완료" onclick="setFilter('개통완료',this)">개통완료</button>
     <button class="chip" data-f="미정산" onclick="setFilter('미정산',this)">미정산</button>
   </div>
