@@ -452,13 +452,15 @@
     </details>
 
     <div class="sec-lbl">1. 기본 · 진행 요약</div>
-    <div class="grid2">
-      <div class="field"><label>고객명 *</label><input id="fName" placeholder="예: 홍길동"></div>
-      <div class="field"><label>연락처 * (숫자만 쳐도 자동 -)</label>
+    <div style="display:grid;grid-template-columns:1.05fr 1.15fr;gap:10px">
+      <div class="field"><label>고객명 *</label>
         <div class="date-row">
-          <input id="fPhone" type="tel" placeholder="01012345678" oninput="fmtPhoneInput(this)">
-          <a id="modalCallBtn" class="today-btn" href="#" style="text-decoration:none;background:#ECFDF5;color:#047857;border-color:#A7F3D0;display:none">📞 전화</a>
+          <input id="fName" placeholder="예: 홍길동">
+          <a id="modalCallBtn" class="today-btn" href="#" style="text-decoration:none;background:#ECFDF5;color:#047857;border-color:#A7F3D0;display:none;white-space:nowrap">📞 전화</a>
         </div>
+      </div>
+      <div class="field"><label>연락처 * (숫자만 입력)</label>
+        <input id="fPhone" type="tel" placeholder="010-1234-5678" oninput="fmtPhoneInput(this)">
       </div>
     </div>
     <div class="grid2">
