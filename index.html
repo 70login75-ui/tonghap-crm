@@ -65,14 +65,15 @@
   }
   .kpi {
     background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 14px; padding: 10px 6px; text-align: center; cursor: pointer;
+    border-radius: 14px; padding: 10px 4px; text-align: center; cursor: pointer;
     transition: transform .12s ease, background .15s ease;
+    display: flex; flex-direction: column; justify-content: space-between; align-items: center;
   }
   .kpi:active { transform: scale(0.97); }
-  .kpi .v { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; }
+  .kpi .v { font-size: 18px; line-height: 24px; min-height: 24px; font-weight: 800; letter-spacing: -0.5px; display: flex; align-items: center; justify-content: center; white-space: nowrap; }
   .kpi.warn .v { color: #FACC15; }
-  .kpi.money .v { color: #34D399; font-size: 14px; line-height: 22px; }
-  .kpi .k { font-size: 12.5px; color: #F1F5F9; margin-top: 3px; font-weight: 800; letter-spacing: -0.2px; }
+  .kpi.money .v { color: #34D399; font-size: 13px; line-height: 24px; }
+  .kpi .k { font-size: 12px; color: #F1F5F9; margin-top: 4px; font-weight: 800; letter-spacing: -0.3px; white-space: nowrap; }
 
   .wrap { max-width: 640px; margin: 0 auto; padding: 0 14px; }
 
