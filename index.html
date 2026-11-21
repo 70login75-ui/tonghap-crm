@@ -431,6 +431,14 @@
     </div>
     <input type="hidden" id="editId">
 
+    <details class="form-acc" style="background:#EFF6FF;border-color:#BFDBFE">
+      <summary style="color:#1E40AF">📋 붙여넣기로 한 번에 채우기 (사진 정리본 붙여넣기)</summary>
+      <div class="field" style="margin-bottom:8px">
+        <textarea id="pasteBox" rows="3" placeholder="제가 사진 보고 정리해 드린 내용을 그대로 붙여넣고 아래 버튼을 누르세요."></textarea>
+      </div>
+      <button type="button" class="add-sim-btn" style="background:#2563EB;color:#fff;border:none" onclick="applyPasteFill()">✨ 각 칸에 자동 채우기</button>
+    </details>
+
     <div class="sec-lbl">1. 기본 · 진행 요약</div>
     <div class="grid2">
       <div class="field"><label>고객명 *</label><input id="fName" placeholder="예: 홍길동"></div>
@@ -1071,6 +1079,96 @@ function removeSimRow(idx) {
   renderSims();
 }
 
+
+function applyPasteFill() {
+  const txt = document.getElementById('pasteBox').value.trim();
+  if (!txt) { alert('붙여넣을 내용을 먼저 입력해 주세요.'); return; }
+  const lines = txt.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  const sims = [];
+  let filled = 0;
+
+  const setVal = (id, v) => { document.getElementById(id).value = v; filled++; };
+  const numOnly = (v) => (v || '').replace(/[^0-9]/g, '');
+
+  for (const line of lines) {
+    const m = line.match(/^[-•*]?\s*([^:：]+?)\s*[:：]\s*(.+)$/);
+    if (!m) continue;
+    const k = m[1].replace(/\s+/g, '').toLowerCase();
+    const v = m[2].trim();
+    if (!v || v === '-' || v === '없음') continue;
+
+    if (k === '고객명' || k === '이름' || k === '성함') setVal('fName', v);
+    else if (k === '연락처' || k === '전화번호' || k === '휴대폰') { setVal('fPhone', v); fmtPhoneInput(document.getElementById('fPhone')); }
+    else if (k === '주민번호' || k === '주민등록번호') setVal('fRrn', v);
+    else if (k === '설치주소' || k === '주소') setVal('fAddress', v);
+    else if (k === '자동이체방식' || k === '결제방식') {
+      if (v.includes('카드')) syncChips('fPayType', 'payTypeChips', '신용카드');
+      else if (v.includes('계좌')) syncChips('fPayType', 'payTypeChips', '계좌이체');
+      else syncChips('fPayType', 'payTypeChips', '미정');
+      filled++;
+    }
+    else if (k === '자동이체1' || k === '자동이체①' || k === '은행' || k === '카드사') setVal('fPayDetail', v);
+    else if (k === '자동이체2' || k === '자동이체②' || k === '계좌번호' || k === '카드번호') setVal('fPayDetail2', v);
+    else if (k === '사은계좌') setVal('fGiftAccount', v);
+    else if (k === '가입통신사' || k === '통신사') {
+      if (/sk/i.test(v)) syncChips('fCarrier', 'carrierChips', 'SK브로드밴드');
+      else if (/kt/i.test(v)) syncChips('fCarrier', 'carrierChips', 'KT');
+      else if (/lg\s*u|유플러스|lgu/i.test(v)) syncChips('fCarrier', 'carrierChips', 'LG U+');
+      else if (/스카이|sky/i.test(v)) syncChips('fCarrier', 'carrierChips', '스카이라이프');
+      else if (/헬로|hello/i.test(v)) syncChips('fCarrier', 'carrierChips', 'LG헬로비전');
+      filled++;
+    }
+    else if (k === '상품유형') {
+      if (v.includes('결합')) syncChips('fProduct', 'productChips', '인터넷+TV+휴대폰결합');
+      else if (v.includes('단독')) syncChips('fProduct', 'productChips', '인터넷 단독');
+      else if (v.includes('유심') || v.includes('무선')) syncChips('fProduct', 'productChips', '유심/무선');
+      else syncChips('fProduct', 'productChips', '인터넷+TV');
+      filled++;
+    }
+    else if (k === '신청상품' || k === '요금제명' || k === '상품') setVal('fPlanName', v);
+    else if (k === '약정기간' || k === '약정개월' || k === '약정') setVal('fTermMonths', numOnly(v) || '36');
+    else if (k === 'ap신청여부' || k === 'ap신청' || k === 'ap' || k === '공유기') {
+      syncChips('fAp', 'apChips', v.includes('미') ? '미신청' : '신청');
+      filled++;
+    }
+    else if (k === '월요금') setVal('fMonthlyFee', numOnly(v));
+    else if (k === '설치희망일') {
+      const dm = v.match(/(\d{4})[-./](\d{1,2})[-./](\d{1,2})/);
+      if (dm) setVal('fInstallWish', `${dm[1]}-${dm[2].padStart(2,'0')}-${dm[3].padStart(2,'0')}`);
+    }
+    else if (k === '설치비' || k === '기사출동비') setVal('fInstallFee', numOnly(v));
+    else if (k === '상품권') setVal('fVoucher', v);
+    else if (k === '고객현금사은품' || k === '현금사은품' || k === '사은품금액') {
+      let n = Number(numOnly(v));
+      if (n >= 10000) n = Math.round(n / 10000);
+      setVal('fGift', n || '');
+    }
+    else if (k === '현금지급처') {
+      syncChips('fCashPayer', 'cashPayerChips', v.includes('웨이브') ? '웨이브넷 지급' : '유치자 직접지급');
+      filled++;
+    }
+    else if (k === '수수료' || k === '내수수료') setVal('fFee', numOnly(v));
+    else if (k === '개통일') {
+      const dm = v.match(/(\d{4})[-./](\d{1,2})[-./](\d{1,2})/);
+      if (dm) { setVal('fOpenDate', `${dm[1]}-${dm[2].padStart(2,'0')}-${dm[3].padStart(2,'0')}`); autoExpiry(); }
+    }
+    else if (k === '기타') setVal('fEtc', v);
+    else if (k === '메모') setVal('fMemo', v);
+    else if (/^유심결합\d+$/.test(k) || /^유심\d+$/.test(k) || /^회선\d+$/.test(k)) {
+      const parts = v.split('|').map(x => x.trim());
+      if (sims.length < 4) {
+        sims.push({
+          name: parts[0] || '', rrn: parts[1] || '', phone: parts[2] || '',
+          carrier: parts[3] || '', plan: parts[4] || '', term: parts[5] || ''
+        });
+        filled++;
+      }
+    }
+  }
+  if (sims.length) { tempSims = sims; renderSims(); }
+  showToast(filled ? `${filled}개 항목 자동 입력 완료!` : '인식된 항목이 없습니다. 형식을 확인해 주세요.');
+}
+
 function openModal(id) {
   const bg = document.getElementById('modalBg');
   const delBtn = document.getElementById('modalDelBtn');
@@ -1078,6 +1176,7 @@ function openModal(id) {
     const item = loadData().find(x => x.id === id);
     if (!item) return;
     document.getElementById('modalTitle').textContent = '고객 정보 수정';
+    document.getElementById('pasteBox').value = '';
     document.getElementById('editId').value = item.id;
     document.getElementById('fName').value = item.name || '';
     document.getElementById('fPhone').value = item.phone || '';
@@ -1113,6 +1212,7 @@ function openModal(id) {
     delBtn.style.display = 'block';
   } else {
     document.getElementById('modalTitle').textContent = '새 고객 등록';
+    document.getElementById('pasteBox').value = '';
     document.getElementById('editId').value = '';
     ['fName','fPhone','fFee','fOpenDate','fExpDate','fRrn','fAddress','fPayDetail','fPayDetail2','fGiftAccount','fPlanName','fMonthlyFee','fInstallWish','fInstallFee','fVoucher','fGift','fEtc','fMemo'].forEach(k => document.getElementById(k).value = '');
     document.getElementById('fTermMonths').value = '36';
