@@ -469,17 +469,7 @@
 
     <details class="form-acc" open>
       <summary>2. 고객 및 청구·결제 정보</summary>
-      <div class="grid2">
-        <div class="field"><label>주민번호</label><input id="fRrn" placeholder="000000-0000000"></div>
-        <div class="field"><label>청구매체</label>
-          <div class="seg-chips" id="billChips">
-            <button type="button" class="seg-btn on" onclick="pickChip('fBillMedia','billChips',this)">문자</button>
-            <button type="button" class="seg-btn" onclick="pickChip('fBillMedia','billChips',this)">이메일</button>
-            <button type="button" class="seg-btn" onclick="pickChip('fBillMedia','billChips',this)">지로</button>
-          </div>
-          <input type="hidden" id="fBillMedia" value="문자">
-        </div>
-      </div>
+      <div class="field"><label>주민번호</label><input id="fRrn" placeholder="000000-0000000"></div>
       <div class="field"><label>설치주소</label><input id="fAddress" placeholder="도로명/상세주소 입력"></div>
       <div class="field"><label>자동이체 방식</label>
         <div class="seg-chips" id="payTypeChips">
@@ -547,10 +537,7 @@
         </div>
         <input type="hidden" id="fCashPayer" value="유치자 직접지급">
       </div>
-      <div class="grid2">
-        <div class="field"><label>본인인증</label><input id="fAuthMethod" placeholder="예: 카카오/신용카드/PASS"></div>
-        <div class="field"><label>이전통신사</label><input id="fPrevCarrier" placeholder="예: KT / 신규"></div>
-      </div>
+
       <div class="field"><label>기타</label><input id="fEtc" placeholder="추가 조건·특이사항"></div>
     </details>
 
@@ -818,7 +805,7 @@ function render() {
     if (filter === '개통완료' && x.status !== '개통완료') return false;
     if (filter === '미정산' && (x.settled || x.status === '보류취소')) return false;
     if (q) {
-      const hay = `${x.name} ${x.phone} ${x.carrier} ${x.product} ${x.planName||''} ${x.address||''} ${x.prevCarrier||''} ${x.memo}`.toLowerCase();
+      const hay = `${x.name} ${x.phone} ${x.carrier} ${x.product} ${x.planName||''} ${x.address||''} ${x.memo}`.toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
@@ -1096,7 +1083,6 @@ function openModal(id) {
     document.getElementById('fSettled').checked = !!item.settled;
 
     document.getElementById('fRrn').value = item.rrn || '';
-    syncChips('fBillMedia', 'billChips', item.billMedia || '문자');
     document.getElementById('fAddress').value = item.address || '';
     syncChips('fPayType', 'payTypeChips', item.payType || '계좌이체');
     document.getElementById('fPayDetail').value = item.payDetail || '';
@@ -1113,8 +1099,6 @@ function openModal(id) {
     document.getElementById('fVoucher').value = item.voucher || '';
     document.getElementById('fGift').value = item.gift || '';
     syncChips('fCashPayer', 'cashPayerChips', item.cashPayer || '유치자 직접지급');
-    document.getElementById('fAuthMethod').value = item.authMethod || '';
-    document.getElementById('fPrevCarrier').value = item.prevCarrier || '';
     document.getElementById('fEtc').value = item.etc || '';
     document.getElementById('fMemo').value = item.memo || '';
 
@@ -1124,11 +1108,10 @@ function openModal(id) {
   } else {
     document.getElementById('modalTitle').textContent = '새 고객 등록';
     document.getElementById('editId').value = '';
-    ['fName','fPhone','fFee','fOpenDate','fExpDate','fRrn','fAddress','fPayDetail','fGiftAccount','fPlanName','fMonthlyFee','fInstallWish','fInstallFee','fVoucher','fGift','fAuthMethod','fPrevCarrier','fEtc','fMemo'].forEach(k => document.getElementById(k).value = '');
+    ['fName','fPhone','fFee','fOpenDate','fExpDate','fRrn','fAddress','fPayDetail','fGiftAccount','fPlanName','fMonthlyFee','fInstallWish','fInstallFee','fVoucher','fGift','fEtc','fMemo'].forEach(k => document.getElementById(k).value = '');
     document.getElementById('fTermMonths').value = '36';
     document.getElementById('fStatus').value = '상담중';
     document.getElementById('fSettled').checked = false;
-    syncChips('fBillMedia', 'billChips', '문자');
     syncChips('fPayType', 'payTypeChips', '계좌이체');
     syncChips('fCarrier', 'carrierChips', 'SK브로드밴드');
     syncChips('fProduct', 'productChips', '인터넷+TV');
@@ -1160,7 +1143,6 @@ function saveCustomer() {
     expDate: document.getElementById('fExpDate').value,
     settled: document.getElementById('fSettled').checked,
     rrn: document.getElementById('fRrn').value.trim(),
-    billMedia: document.getElementById('fBillMedia').value,
     address: document.getElementById('fAddress').value.trim(),
     payType: document.getElementById('fPayType').value,
     payDetail: document.getElementById('fPayDetail').value.trim(),
@@ -1176,8 +1158,6 @@ function saveCustomer() {
     voucher: document.getElementById('fVoucher').value.trim(),
     gift: Number(document.getElementById('fGift').value) || 0,
     cashPayer: document.getElementById('fCashPayer').value,
-    authMethod: document.getElementById('fAuthMethod').value.trim(),
-    prevCarrier: document.getElementById('fPrevCarrier').value.trim(),
     etc: document.getElementById('fEtc').value.trim(),
     sims: tempSims.filter(s => s.name || s.phone || s.carrier || s.plan),
     photos: tempPhotos,
@@ -1234,11 +1214,11 @@ function downloadICS(id) {
 
 function exportCSV() {
   const data = loadData();
-  const hdr = ['고객명','연락처','주민번호','청구매체','설치주소','자동이체방식','자동이체상세','사은계좌','통신사','상품유형','신청상품','약정개월','AP신청','월요금','설치희망일','설치비','상품권','현금사은품(만원)','현금지급처','본인인증','이전통신사','기타','유심결합수','개통일','약정만료일','상태','수수료(원)','정산여부','사진수','메모'];
+  const hdr = ['고객명','연락처','주민번호','설치주소','자동이체방식','자동이체상세','사은계좌','통신사','상품유형','신청상품','약정개월','AP신청','월요금','설치희망일','설치비','상품권','현금사은품(만원)','현금지급처','기타','유심결합수','개통일','약정만료일','상태','수수료(원)','정산여부','사진수','메모'];
   const lines = [hdr.join(',')].concat(data.map(x => [
-    x.name, x.phone, x.rrn, x.billMedia, x.address, x.payType, x.payDetail, x.giftAccount,
+    x.name, x.phone, x.rrn, x.address, x.payType, x.payDetail, x.giftAccount,
     x.carrier, x.product, x.planName, x.termMonths, x.ap, x.monthlyFee, x.installWish, x.installFee,
-    x.voucher, x.gift, x.cashPayer, x.authMethod, x.prevCarrier, x.etc, (x.sims||[]).length,
+    x.voucher, x.gift, x.cashPayer, x.etc, (x.sims||[]).length,
     x.openDate, x.expDate, x.status, x.fee, x.settled ? '완료' : '미정산', (x.photos||[]).length, (x.memo||'').replace(/\n/g,' ')
   ].map(v => `"${String(v||'').replace(/"/g,'""')}"`).join(',')));
   const blob = new Blob(['\uFEFF' + lines.join('\n')], {type:'text/csv;charset=utf-8;'});
