@@ -296,9 +296,78 @@
     background: rgba(11, 17, 32, 0.92); color: #fff; padding: 10px 18px; border-radius: 999px;
     font-size: 13px; font-weight: 700; display: none; z-index: 60; box-shadow: 0 6px 20px rgba(0,0,0,.2);
   }
+
+  /* Lock Screen & Extra Form Styles */
+  .lock-screen {
+    position: fixed; inset: 0; z-index: 9999;
+    background: linear-gradient(155deg, #0B1120 0%, #172554 100%);
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    padding: 24px; color: #fff;
+  }
+  .lock-screen.open { display: flex; }
+  .lock-box {
+    width: 100%; max-width: 340px; background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.16); border-radius: 24px;
+    padding: 26px 20px; text-align: center; backdrop-filter: blur(12px);
+  }
+  .lock-ico {
+    width: 54px; height: 54px; border-radius: 16px; margin: 0 auto 12px;
+    background: linear-gradient(135deg, #3B82F6, #FACC15); color: #0B1120;
+    display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900;
+  }
+  .lock-box h2 { margin: 0 0 6px; font-size: 19px; font-weight: 800; }
+  .lock-box p { margin: 0 0 18px; font-size: 12.5px; color: #CBD5E1; line-height: 1.45; }
+  .lock-inp {
+    width: 100%; padding: 13px 14px; border-radius: 12px; border: 1.5px solid rgba(255,255,255,0.22);
+    background: rgba(15,23,42,0.7); color: #fff; font-size: 16px; text-align: center;
+    letter-spacing: 2px; outline: none; margin-bottom: 10px;
+  }
+  .lock-inp:focus { border-color: #FACC15; }
+  .lock-btn {
+    width: 100%; padding: 13px; border: none; border-radius: 12px;
+    background: #FACC15; color: #0B1120; font-size: 15px; font-weight: 800; cursor: pointer;
+  }
+  .lock-err { color: #FCA5A5; font-size: 12px; min-height: 18px; margin-top: 8px; }
+  .hero-actions { display: flex; gap: 6px; align-items: center; }
+  details.form-acc {
+    border: 1px solid #E2E8F0; border-radius: 14px; padding: 10px 12px;
+    margin-bottom: 12px; background: #F8FAFC;
+  }
+  details.form-acc summary {
+    font-size: 13px; font-weight: 800; color: #0F172A; cursor: pointer;
+    list-style: none; display: flex; justify-content: space-between; align-items: center;
+  }
+  details.form-acc summary::after { content: '▾'; color: #64748B; font-size: 13px; }
+  details.form-acc[open] summary { margin-bottom: 10px; }
+  details.form-acc[open] summary::after { content: '▴'; }
+  .sim-card {
+    background: #fff; border: 1px solid #CBD5E1; border-radius: 12px;
+    padding: 10px; margin-bottom: 8px;
+  }
+  .sim-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 12px; font-weight: 800; color: #1E3A8A; }
+  .sim-del { background: #FEE2E2; color: #B91C1C; border: none; border-radius: 8px; padding: 3px 8px; font-size: 11px; font-weight: 700; cursor: pointer; }
+  .add-sim-btn {
+    width: 100%; padding: 10px; border: 1.5px dashed #93C5FD; border-radius: 12px;
+    background: #EFF6FF; color: #1D4ED8; font-size: 12.5px; font-weight: 700; cursor: pointer;
+  }
+  .detail-badges { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+  .d-badge { font-size: 11px; background: #F1F5F9; color: #334155; padding: 3px 8px; border-radius: 7px; font-weight: 600; }
+
 </style>
 </head>
 <body>
+
+<div class="lock-screen" id="lockScreen">
+  <div class="lock-box">
+    <div class="lock-ico">🔒</div>
+    <h2>통합고객관리 잠금</h2>
+    <p>설정하신 로그인 비밀번호를 입력해 주세요.</p>
+    <input type="password" id="lockInput" class="lock-inp" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')unlockApp()">
+    <button class="lock-btn" onclick="unlockApp()">잠금 해제</button>
+    <div class="lock-err" id="lockErr"></div>
+  </div>
+</div>
+
 
 <div class="hero">
   <div class="hero-top">
@@ -309,7 +378,10 @@
         <div class="brand-sub">5사 인터넷·TV 고객·약정 케어</div>
       </div>
     </div>
-    <button class="icon-pill" onclick="openDataModal()">⚙️ 백업·엑셀</button>
+    <div class="hero-actions">
+      <button class="icon-pill" id="lockPill" onclick="handleLockPill()">🔒 잠금</button>
+      <button class="icon-pill" onclick="openDataModal()">⚙️ 설정</button>
+    </div>
   </div>
   <div class="kpi-grid">
     <div class="kpi" onclick="quickFilter('전체')"><div class="v" id="stTotal">0</div><div class="k">전체 고객</div></div>
@@ -359,7 +431,7 @@
     </div>
     <input type="hidden" id="editId">
 
-    <div class="sec-lbl">1. 기본 정보</div>
+    <div class="sec-lbl">1. 기본 · 진행 요약</div>
     <div class="grid2">
       <div class="field"><label>고객명 *</label><input id="fName" placeholder="예: 홍길동"></div>
       <div class="field"><label>연락처 * (숫자만 쳐도 자동 -)</label>
@@ -369,38 +441,6 @@
         </div>
       </div>
     </div>
-
-    <div class="sec-lbl">2. 통신사 · 상품 · 36개월 약정</div>
-    <div class="field"><label>통신사 (터치 선택)</label>
-      <div class="seg-chips" id="carrierChips">
-        <button type="button" class="seg-btn on" onclick="pickChip('fCarrier','carrierChips',this)">SK브로드밴드</button>
-        <button type="button" class="seg-btn" onclick="pickChip('fCarrier','carrierChips',this)">KT</button>
-        <button type="button" class="seg-btn" onclick="pickChip('fCarrier','carrierChips',this)">LG U+</button>
-        <button type="button" class="seg-btn" onclick="pickChip('fCarrier','carrierChips',this)">스카이라이프</button>
-        <button type="button" class="seg-btn" onclick="pickChip('fCarrier','carrierChips',this)">LG헬로비전</button>
-      </div>
-      <input type="hidden" id="fCarrier" value="SK브로드밴드">
-    </div>
-    <div class="field"><label>상품 유형 (터치 선택)</label>
-      <div class="seg-chips" id="productChips">
-        <button type="button" class="seg-btn on" onclick="pickChip('fProduct','productChips',this)">인터넷+TV</button>
-        <button type="button" class="seg-btn" onclick="pickChip('fProduct','productChips',this)">인터넷 단독</button>
-        <button type="button" class="seg-btn" onclick="pickChip('fProduct','productChips',this)">인터넷+TV+휴대폰결합</button>
-        <button type="button" class="seg-btn" onclick="pickChip('fProduct','productChips',this)">유심/무선</button>
-      </div>
-      <input type="hidden" id="fProduct" value="인터넷+TV">
-    </div>
-    <div class="grid2">
-      <div class="field"><label>개통일 (자동 +3년)</label>
-        <div class="date-row">
-          <input id="fOpenDate" type="date" onchange="autoExpiry()">
-          <button type="button" class="today-btn" onclick="setTodayOpen()">오늘</button>
-        </div>
-      </div>
-      <div class="field"><label>3년 약정 만료일</label><input id="fExpDate" type="date"></div>
-    </div>
-
-    <div class="sec-lbl">3. 상태 · 정산</div>
     <div class="grid2">
       <div class="field">
         <label>진행 상태</label>
@@ -411,15 +451,116 @@
           <option value="보류취소">보류/취소</option>
         </select>
       </div>
-      <div class="field"><label>현금지원·사은품 (만 원)</label><input id="fGift" type="number" placeholder="예: 60"></div>
+      <div class="field"><label>내 수수료 (원)</label><input id="fFee" type="number" placeholder="예: 250000"></div>
     </div>
-    <div class="field"><label>내 수수료 (원)</label><input id="fFee" type="number" placeholder="예: 250000"></div>
+    <div class="grid2">
+      <div class="field"><label>개통일 (자동 +3년)</label>
+        <div class="date-row">
+          <input id="fOpenDate" type="date" onchange="autoExpiry()">
+          <button type="button" class="today-btn" onclick="setTodayOpen()">오늘</button>
+        </div>
+      </div>
+      <div class="field"><label>약정 만료일</label><input id="fExpDate" type="date"></div>
+    </div>
     <div class="chk-row">
       <input type="checkbox" id="fSettled">
       <label for="fSettled">수수료 정산 완료</label>
     </div>
 
-    <div class="sec-lbl">4. 사진 첨부 (신청서 · 청구서 · 설치 사진)</div>
+    <details class="form-acc" open>
+      <summary>2. 고객 및 청구·결제 정보</summary>
+      <div class="grid2">
+        <div class="field"><label>주민번호</label><input id="fRrn" placeholder="000000-0000000"></div>
+        <div class="field"><label>청구매체</label>
+          <div class="seg-chips" id="billChips">
+            <button type="button" class="seg-btn on" onclick="pickChip('fBillMedia','billChips',this)">문자</button>
+            <button type="button" class="seg-btn" onclick="pickChip('fBillMedia','billChips',this)">이메일</button>
+            <button type="button" class="seg-btn" onclick="pickChip('fBillMedia','billChips',this)">지로</button>
+          </div>
+          <input type="hidden" id="fBillMedia" value="문자">
+        </div>
+      </div>
+      <div class="field"><label>설치주소</label><input id="fAddress" placeholder="도로명/상세주소 입력"></div>
+      <div class="field"><label>자동이체 방식</label>
+        <div class="seg-chips" id="payTypeChips">
+          <button type="button" class="seg-btn on" onclick="pickChip('fPayType','payTypeChips',this)">계좌이체</button>
+          <button type="button" class="seg-btn" onclick="pickChip('fPayType','payTypeChips',this)">신용카드</button>
+          <button type="button" class="seg-btn" onclick="pickChip('fPayType','payTypeChips',this)">미정</button>
+        </div>
+        <input type="hidden" id="fPayType" value="계좌이체">
+      </div>
+      <div class="field"><label>자동이체 상세 (카드: 카드사/번호/유효기간/카드주 · 계좌: 은행/번호/예금주)</label>
+        <input id="fPayDetail" placeholder="예: 농협 302-... 홍길동">
+      </div>
+      <div class="field"><label>사은계좌 (유치자 지급은 미기재)</label>
+        <input id="fGiftAccount" placeholder="웨이브넷 지급 시에만 기재">
+      </div>
+    </details>
+
+    <details class="form-acc" open>
+      <summary>3. 인터넷·TV 가입 상품 및 사은품 내역</summary>
+      <div class="field"><label>가입통신사</label>
+        <div class="seg-chips" id="carrierChips">
+          <button type="button" class="seg-btn on" onclick="pickChip('fCarrier','carrierChips',this)">SK브로드밴드</button>
+          <button type="button" class="seg-btn" onclick="pickChip('fCarrier','carrierChips',this)">KT</button>
+          <button type="button" class="seg-btn" onclick="pickChip('fCarrier','carrierChips',this)">LG U+</button>
+          <button type="button" class="seg-btn" onclick="pickChip('fCarrier','carrierChips',this)">스카이라이프</button>
+          <button type="button" class="seg-btn" onclick="pickChip('fCarrier','carrierChips',this)">LG헬로비전</button>
+        </div>
+        <input type="hidden" id="fCarrier" value="SK브로드밴드">
+      </div>
+      <div class="field"><label>상품 유형</label>
+        <div class="seg-chips" id="productChips">
+          <button type="button" class="seg-btn on" onclick="pickChip('fProduct','productChips',this)">인터넷+TV</button>
+          <button type="button" class="seg-btn" onclick="pickChip('fProduct','productChips',this)">인터넷 단독</button>
+          <button type="button" class="seg-btn" onclick="pickChip('fProduct','productChips',this)">인터넷+TV+휴대폰결합</button>
+          <button type="button" class="seg-btn" onclick="pickChip('fProduct','productChips',this)">유심/무선</button>
+        </div>
+        <input type="hidden" id="fProduct" value="인터넷+TV">
+      </div>
+      <div class="grid2">
+        <div class="field"><label>신청상품 (속도·요금제명)</label><input id="fPlanName" placeholder="예: 500M + 베이직TV"></div>
+        <div class="field"><label>약정 기간 (개월)</label><input id="fTermMonths" type="number" value="36" placeholder="36"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>AP(공유기) 신청여부</label>
+          <div class="seg-chips" id="apChips">
+            <button type="button" class="seg-btn on" onclick="pickChip('fAp','apChips',this)">신청</button>
+            <button type="button" class="seg-btn" onclick="pickChip('fAp','apChips',this)">미신청</button>
+          </div>
+          <input type="hidden" id="fAp" value="신청">
+        </div>
+        <div class="field"><label>월요금 (원)</label><input id="fMonthlyFee" type="number" placeholder="예: 38500"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>설치희망일</label><input id="fInstallWish" type="date"></div>
+        <div class="field"><label>설치비·기사출동비 (원)</label><input id="fInstallFee" type="number" placeholder="예: 36300"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>상품권</label><input id="fVoucher" placeholder="예: 신세계 10만"></div>
+        <div class="field"><label>고객 현금사은품 (만 원)</label><input id="fGift" type="number" placeholder="예: 50"></div>
+      </div>
+      <div class="field"><label>현금지급처</label>
+        <div class="seg-chips" id="cashPayerChips">
+          <button type="button" class="seg-btn on" onclick="pickChip('fCashPayer','cashPayerChips',this)">유치자 직접지급</button>
+          <button type="button" class="seg-btn" onclick="pickChip('fCashPayer','cashPayerChips',this)">웨이브넷 지급</button>
+        </div>
+        <input type="hidden" id="fCashPayer" value="유치자 직접지급">
+      </div>
+      <div class="grid2">
+        <div class="field"><label>본인인증</label><input id="fAuthMethod" placeholder="예: 카카오/신용카드/PASS"></div>
+        <div class="field"><label>이전통신사</label><input id="fPrevCarrier" placeholder="예: KT / 신규"></div>
+      </div>
+      <div class="field"><label>기타</label><input id="fEtc" placeholder="추가 조건·특이사항"></div>
+    </details>
+
+    <details class="form-acc">
+      <summary>4. 휴대폰 유심 결합 (최대 4회선)</summary>
+      <div id="simList"></div>
+      <button type="button" class="add-sim-btn" id="addSimBtn" onclick="addSimRow()">+ 유심 결합 회선 추가 (최대 4회선)</button>
+    </details>
+
+    <div class="sec-lbl">5. 사진 첨부 (신청서 · 신분증 주의 · 설치 사진)</div>
     <div class="photo-btns">
       <button type="button" class="photo-btn" onclick="document.getElementById('camInput').click()">📷 카메라 촬영</button>
       <button type="button" class="photo-btn" onclick="document.getElementById('galInput').click()">🖼️ 갤러리 업로드</button>
@@ -428,8 +569,8 @@
     <input type="file" id="galInput" accept="image/*" multiple style="display:none" onchange="handlePhotos(event)">
     <div class="preview-grid" id="pvGrid"></div>
 
-    <div class="sec-lbl">5. 메모</div>
-    <div class="field"><textarea id="fMemo" rows="3" placeholder="설치 주소, 결합 회선, 특이사항 등"></textarea></div>
+    <div class="sec-lbl">6. 메모</div>
+    <div class="field"><textarea id="fMemo" rows="2" placeholder="추가 전달사항, 해피콜 일정 등"></textarea></div>
 
     <div class="btn-row">
       <button type="button" class="del-btn" id="modalDelBtn" style="display:none" onclick="delFromModal()">삭제</button>
@@ -446,11 +587,43 @@
       <h2>백업 · 엑셀 · 데이터 관리</h2>
       <button class="close-x" onclick="closeDataModal()">✕</button>
     </div>
+    <button class="menu-btn" onclick="openPassModal()">🔐 로그인 비밀번호 설정 · 변경 <span>앱 열 때 잠금</span></button>
     <button class="menu-btn" onclick="exportCSV()">📊 엑셀(CSV) 파일로 내보내기 <span>고객 목록 정리</span></button>
     <button class="menu-btn" onclick="exportJSON()">💾 전체 백업 저장 (JSON) <span>사진 포함 안전 보관</span></button>
     <button class="menu-btn" onclick="document.getElementById('importFile').click()">📥 백업 파일 불러오기 (복원) <span>기존 파일 덮어쓰기</span></button>
     <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
     <button class="menu-btn" style="color:#DC2626" onclick="clearSamples()">🧹 샘플 데이터만 지우기 <span>샘플 2건 정리</span></button>
+  </div>
+</div>
+
+
+<!-- Password Settings Modal -->
+<div class="modal-bg" id="passBg" onclick="if(event.target===this)closePassModal()">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-hdr">
+      <h2>🔐 로그인 비밀번호 설정</h2>
+      <button class="close-x" onclick="closePassModal()">✕</button>
+    </div>
+    <div class="field" id="curPassWrap" style="display:none">
+      <label>현재 비밀번호</label>
+      <input type="password" id="pCur" placeholder="현재 비밀번호 입력">
+    </div>
+    <div class="field">
+      <label>새 비밀번호 (4자리 숫자 또는 문자)</label>
+      <input type="password" id="pNew" placeholder="새 비밀번호 입력">
+    </div>
+    <div class="field">
+      <label>새 비밀번호 확인</label>
+      <input type="password" id="pConfirm" placeholder="한 번 더 입력">
+    </div>
+    <p style="font-size:11.5px;color:#64748B;margin:4px 0 12px;line-height:1.45">
+      ※ 이 폰 브라우저에만 저장됩니다. 비밀번호를 잊으면 브라우저 데이터 초기화가 필요하니 백업(.json)을 꼭 따로 보관하세요.
+    </p>
+    <div class="btn-row">
+      <button type="button" class="del-btn" id="passClearBtn" style="display:none" onclick="clearPassword()">잠금 해제</button>
+      <button type="button" class="save-btn" onclick="savePassword()">비밀번호 저장</button>
+    </div>
   </div>
 </div>
 
@@ -645,7 +818,7 @@ function render() {
     if (filter === '개통완료' && x.status !== '개통완료') return false;
     if (filter === '미정산' && (x.settled || x.status === '보류취소')) return false;
     if (q) {
-      const hay = `${x.name} ${x.phone} ${x.carrier} ${x.product} ${x.memo}`.toLowerCase();
+      const hay = `${x.name} ${x.phone} ${x.carrier} ${x.product} ${x.planName||''} ${x.address||''} ${x.prevCarrier||''} ${x.memo}`.toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
@@ -706,8 +879,16 @@ function render() {
         </div>
         <div class="c-sub">
           <a class="phone-copy" href="tel:${cleanPhone}" style="text-decoration:none">📞 ${esc(x.phone)}</a>
-          <span class="prod-txt">${esc(x.product)}${x.gift ? ` · 지원 ${x.gift}만` : ''}</span>
+          <span class="prod-txt">${esc(x.planName ? x.product + " (" + x.planName + ")" : x.product)}${x.gift ? ` · 사은품 ${x.gift}만` : ''}</span>
         </div>
+        ${(() => {
+          const b = [];
+          if (x.address) b.push('📍 ' + esc(x.address));
+          if (x.monthlyFee) b.push('💳 월 ' + fmtMoney(x.monthlyFee));
+          if (x.cashPayer) b.push('💵 ' + esc(x.cashPayer));
+          if (x.sims && x.sims.length) b.push('📱 유심결합 ' + x.sims.length + '회선');
+          return b.length ? `<div class="detail-badges">${b.map(t=>`<span class="d-badge">${t}</span>`).join('')}</div>` : '';
+        })()}
         ${progHtml}
         ${x.fee ? `
           <div class="fee-row">
@@ -786,6 +967,118 @@ function closeLightbox() { document.getElementById('lightbox').classList.remove(
 function openDataModal() { document.getElementById('dataBg').classList.add('open'); }
 function closeDataModal() { document.getElementById('dataBg').classList.remove('open'); }
 
+const PASS_KEY = 'tonghap_crm_pass_hash_v1';
+let tempSims = [];
+
+async function hashStr(s) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('tonghap_' + s));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+function updateLockPill() {
+  const has = !!localStorage.getItem(PASS_KEY);
+  document.getElementById('lockPill').textContent = has ? '🔒 잠금' : '🔓 잠금설정';
+}
+
+function handleLockPill() {
+  if (localStorage.getItem(PASS_KEY)) {
+    document.getElementById('lockInput').value = '';
+    document.getElementById('lockErr').textContent = '';
+    document.getElementById('lockScreen').classList.add('open');
+  } else {
+    openPassModal();
+  }
+}
+
+async function unlockApp() {
+  const val = document.getElementById('lockInput').value;
+  const saved = localStorage.getItem(PASS_KEY);
+  if (!saved) { document.getElementById('lockScreen').classList.remove('open'); return; }
+  const h = await hashStr(val);
+  if (h === saved) {
+    document.getElementById('lockScreen').classList.remove('open');
+    document.getElementById('lockInput').value = '';
+    document.getElementById('lockErr').textContent = '';
+  } else {
+    document.getElementById('lockErr').textContent = '비밀번호가 일치하지 않습니다.';
+  }
+}
+
+function openPassModal() {
+  closeDataModal();
+  const has = !!localStorage.getItem(PASS_KEY);
+  document.getElementById('curPassWrap').style.display = has ? 'block' : 'none';
+  document.getElementById('passClearBtn').style.display = has ? 'block' : 'none';
+  ['pCur','pNew','pConfirm'].forEach(k => document.getElementById(k).value = '');
+  document.getElementById('passBg').classList.add('open');
+}
+function closePassModal() { document.getElementById('passBg').classList.remove('open'); }
+
+async function savePassword() {
+  const saved = localStorage.getItem(PASS_KEY);
+  if (saved) {
+    const cur = document.getElementById('pCur').value;
+    if (await hashStr(cur) !== saved) { alert('현재 비밀번호가 맞지 않습니다.'); return; }
+  }
+  const n1 = document.getElementById('pNew').value;
+  const n2 = document.getElementById('pConfirm').value;
+  if (!n1 || n1.length < 4) { alert('비밀번호를 4자리 이상 입력해 주세요.'); return; }
+  if (n1 !== n2) { alert('새 비밀번호 확인이 일치하지 않습니다.'); return; }
+  localStorage.setItem(PASS_KEY, await hashStr(n1));
+  updateLockPill();
+  closePassModal();
+  showToast('로그인 비밀번호가 설정되었습니다!');
+}
+
+async function clearPassword() {
+  const saved = localStorage.getItem(PASS_KEY);
+  if (saved) {
+    const cur = document.getElementById('pCur').value;
+    if (await hashStr(cur) !== saved) { alert('현재 비밀번호를 먼저 입력해 주세요.'); return; }
+  }
+  localStorage.removeItem(PASS_KEY);
+  updateLockPill();
+  closePassModal();
+  showToast('비밀번호 잠금이 해제되었습니다.');
+}
+
+function renderSims() {
+  const box = document.getElementById('simList');
+  const btn = document.getElementById('addSimBtn');
+  box.innerHTML = tempSims.map((s, i) => `
+    <div class="sim-card">
+      <div class="sim-hdr">
+        <span>회선 ${i + 1}</span>
+        <button type="button" class="sim-del" onclick="removeSimRow(${i})">삭제</button>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>성함</label><input value="${esc(s.name||'')}" oninput="tempSims[${i}].name=this.value" placeholder="성함"></div>
+        <div class="field"><label>주민등록번호</label><input value="${esc(s.rrn||'')}" oninput="tempSims[${i}].rrn=this.value" placeholder="000000-0000000"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>전화번호</label><input type="tel" value="${esc(s.phone||'')}" oninput="fmtPhoneInput(this);tempSims[${i}].phone=this.value" placeholder="010-0000-0000"></div>
+        <div class="field"><label>기존 통신사</label><input value="${esc(s.carrier||'')}" oninput="tempSims[${i}].carrier=this.value" placeholder="예: SKT"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>요금제</label><input value="${esc(s.plan||'')}" oninput="tempSims[${i}].plan=this.value" placeholder="예: 5G 슬림"></div>
+        <div class="field"><label>약정 기간</label><input value="${esc(s.term||'')}" oninput="tempSims[${i}].term=this.value" placeholder="예: 24개월"></div>
+      </div>
+    </div>
+  `).join('');
+  btn.style.display = tempSims.length >= 4 ? 'none' : 'block';
+}
+
+function addSimRow() {
+  if (tempSims.length >= 4) return;
+  tempSims.push({name:'', rrn:'', phone:'', carrier:'', plan:'', term:''});
+  renderSims();
+}
+
+function removeSimRow(idx) {
+  tempSims.splice(idx, 1);
+  renderSims();
+}
+
 function openModal(id) {
   const bg = document.getElementById('modalBg');
   const delBtn = document.getElementById('modalDelBtn');
@@ -796,28 +1089,56 @@ function openModal(id) {
     document.getElementById('editId').value = item.id;
     document.getElementById('fName').value = item.name || '';
     document.getElementById('fPhone').value = item.phone || '';
-    syncChips('fCarrier', 'carrierChips', item.carrier || 'SK브로드밴드');
-    syncChips('fProduct', 'productChips', item.product || '인터넷+TV');
+    document.getElementById('fStatus').value = item.status || '상담중';
+    document.getElementById('fFee').value = item.fee || '';
     document.getElementById('fOpenDate').value = item.openDate || '';
     document.getElementById('fExpDate').value = item.expDate || '';
-    document.getElementById('fStatus').value = item.status || '상담중';
-    document.getElementById('fGift').value = item.gift || '';
-    document.getElementById('fFee').value = item.fee || '';
     document.getElementById('fSettled').checked = !!item.settled;
+
+    document.getElementById('fRrn').value = item.rrn || '';
+    syncChips('fBillMedia', 'billChips', item.billMedia || '문자');
+    document.getElementById('fAddress').value = item.address || '';
+    syncChips('fPayType', 'payTypeChips', item.payType || '계좌이체');
+    document.getElementById('fPayDetail').value = item.payDetail || '';
+    document.getElementById('fGiftAccount').value = item.giftAccount || '';
+
+    syncChips('fCarrier', 'carrierChips', item.carrier || 'SK브로드밴드');
+    syncChips('fProduct', 'productChips', item.product || '인터넷+TV');
+    document.getElementById('fPlanName').value = item.planName || '';
+    document.getElementById('fTermMonths').value = item.termMonths || '36';
+    syncChips('fAp', 'apChips', item.ap || '신청');
+    document.getElementById('fMonthlyFee').value = item.monthlyFee || '';
+    document.getElementById('fInstallWish').value = item.installWish || '';
+    document.getElementById('fInstallFee').value = item.installFee || '';
+    document.getElementById('fVoucher').value = item.voucher || '';
+    document.getElementById('fGift').value = item.gift || '';
+    syncChips('fCashPayer', 'cashPayerChips', item.cashPayer || '유치자 직접지급');
+    document.getElementById('fAuthMethod').value = item.authMethod || '';
+    document.getElementById('fPrevCarrier').value = item.prevCarrier || '';
+    document.getElementById('fEtc').value = item.etc || '';
     document.getElementById('fMemo').value = item.memo || '';
+
+    tempSims = Array.isArray(item.sims) ? item.sims.map(s => ({...s})) : [];
     tempPhotos = Array.isArray(item.photos) ? [...item.photos] : [];
     delBtn.style.display = 'block';
   } else {
     document.getElementById('modalTitle').textContent = '새 고객 등록';
     document.getElementById('editId').value = '';
-    ['fName','fPhone','fOpenDate','fExpDate','fGift','fFee','fMemo'].forEach(k => document.getElementById(k).value = '');
-    syncChips('fCarrier', 'carrierChips', 'SK브로드밴드');
-    syncChips('fProduct', 'productChips', '인터넷+TV');
+    ['fName','fPhone','fFee','fOpenDate','fExpDate','fRrn','fAddress','fPayDetail','fGiftAccount','fPlanName','fMonthlyFee','fInstallWish','fInstallFee','fVoucher','fGift','fAuthMethod','fPrevCarrier','fEtc','fMemo'].forEach(k => document.getElementById(k).value = '');
+    document.getElementById('fTermMonths').value = '36';
     document.getElementById('fStatus').value = '상담중';
     document.getElementById('fSettled').checked = false;
+    syncChips('fBillMedia', 'billChips', '문자');
+    syncChips('fPayType', 'payTypeChips', '계좌이체');
+    syncChips('fCarrier', 'carrierChips', 'SK브로드밴드');
+    syncChips('fProduct', 'productChips', '인터넷+TV');
+    syncChips('fAp', 'apChips', '신청');
+    syncChips('fCashPayer', 'cashPayerChips', '유치자 직접지급');
+    tempSims = [];
     tempPhotos = [];
     delBtn.style.display = 'none';
   }
+  renderSims();
   renderPreviewPhotos();
   syncModalCall();
   bg.classList.add('open');
@@ -833,14 +1154,32 @@ function saveCustomer() {
   const id = document.getElementById('editId').value || ('c_' + Date.now());
   const rec = {
     id, name, phone,
-    carrier: document.getElementById('fCarrier').value,
-    product: document.getElementById('fProduct').value,
+    status: document.getElementById('fStatus').value,
+    fee: Number(document.getElementById('fFee').value) || 0,
     openDate: document.getElementById('fOpenDate').value,
     expDate: document.getElementById('fExpDate').value,
-    status: document.getElementById('fStatus').value,
-    gift: Number(document.getElementById('fGift').value) || 0,
-    fee: Number(document.getElementById('fFee').value) || 0,
     settled: document.getElementById('fSettled').checked,
+    rrn: document.getElementById('fRrn').value.trim(),
+    billMedia: document.getElementById('fBillMedia').value,
+    address: document.getElementById('fAddress').value.trim(),
+    payType: document.getElementById('fPayType').value,
+    payDetail: document.getElementById('fPayDetail').value.trim(),
+    giftAccount: document.getElementById('fGiftAccount').value.trim(),
+    carrier: document.getElementById('fCarrier').value,
+    product: document.getElementById('fProduct').value,
+    planName: document.getElementById('fPlanName').value.trim(),
+    termMonths: Number(document.getElementById('fTermMonths').value) || 36,
+    ap: document.getElementById('fAp').value,
+    monthlyFee: Number(document.getElementById('fMonthlyFee').value) || 0,
+    installWish: document.getElementById('fInstallWish').value,
+    installFee: Number(document.getElementById('fInstallFee').value) || 0,
+    voucher: document.getElementById('fVoucher').value.trim(),
+    gift: Number(document.getElementById('fGift').value) || 0,
+    cashPayer: document.getElementById('fCashPayer').value,
+    authMethod: document.getElementById('fAuthMethod').value.trim(),
+    prevCarrier: document.getElementById('fPrevCarrier').value.trim(),
+    etc: document.getElementById('fEtc').value.trim(),
+    sims: tempSims.filter(s => s.name || s.phone || s.carrier || s.plan),
     photos: tempPhotos,
     memo: document.getElementById('fMemo').value.trim(),
     createdAt: Date.now()
@@ -880,7 +1219,7 @@ function downloadICS(id) {
     'BEGIN:VEVENT', `UID:${x.id}@tonghapinternet`,
     `DTSTART:${dt}T090000`, `DTEND:${dt}T093000`,
     `SUMMARY:[약정만료] ${x.name} (${x.carrier}) 36개월 도래`,
-    `DESCRIPTION:고객명: ${x.name}\\n연락처: ${x.phone}\\n통신사: ${x.carrier} (${x.product})\\n개통일: ${x.openDate||'-'}`,
+    `DESCRIPTION:고객명: ${x.name}\n연락처: ${x.phone}\n통신사: ${x.carrier} (${x.product})\n개통일: ${x.openDate||'-'}`,
     'BEGIN:VALARM', 'TRIGGER:-PT0M', 'ACTION:DISPLAY',
     `DESCRIPTION:${x.name}님 36개월 약정 만료!`, 'END:VALARM',
     'END:VEVENT', 'END:VCALENDAR'
@@ -895,10 +1234,12 @@ function downloadICS(id) {
 
 function exportCSV() {
   const data = loadData();
-  const hdr = ['고객명','연락처','통신사','상품','개통일','약정만료일','상태','현금지원(만원)','수수료(원)','정산여부','사진수','메모'];
+  const hdr = ['고객명','연락처','주민번호','청구매체','설치주소','자동이체방식','자동이체상세','사은계좌','통신사','상품유형','신청상품','약정개월','AP신청','월요금','설치희망일','설치비','상품권','현금사은품(만원)','현금지급처','본인인증','이전통신사','기타','유심결합수','개통일','약정만료일','상태','수수료(원)','정산여부','사진수','메모'];
   const lines = [hdr.join(',')].concat(data.map(x => [
-    x.name, x.phone, x.carrier, x.product, x.openDate, x.expDate,
-    x.status, x.gift, x.fee, x.settled ? '완료' : '미정산', (x.photos||[]).length, (x.memo||'').replace(/\n/g,' ')
+    x.name, x.phone, x.rrn, x.billMedia, x.address, x.payType, x.payDetail, x.giftAccount,
+    x.carrier, x.product, x.planName, x.termMonths, x.ap, x.monthlyFee, x.installWish, x.installFee,
+    x.voucher, x.gift, x.cashPayer, x.authMethod, x.prevCarrier, x.etc, (x.sims||[]).length,
+    x.openDate, x.expDate, x.status, x.fee, x.settled ? '완료' : '미정산', (x.photos||[]).length, (x.memo||'').replace(/\n/g,' ')
   ].map(v => `"${String(v||'').replace(/"/g,'""')}"`).join(',')));
   const blob = new Blob(['\uFEFF' + lines.join('\n')], {type:'text/csv;charset=utf-8;'});
   const a = document.createElement('a');
@@ -929,6 +1270,10 @@ function importJSON(e) {
   r.readAsText(f);
 }
 
+updateLockPill();
+if (localStorage.getItem(PASS_KEY)) {
+  document.getElementById('lockScreen').classList.add('open');
+}
 render();
 </script>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("./sw.js").catch(()=>{});}</script>
