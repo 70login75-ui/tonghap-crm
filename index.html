@@ -355,6 +355,16 @@
   .detail-badges { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
   .d-badge { font-size: 11px; background: #F1F5F9; color: #334155; padding: 3px 8px; border-radius: 7px; font-weight: 600; }
 
+
+  .c-name { cursor: pointer; text-decoration: underline; text-decoration-color: #CBD5E1; text-underline-offset: 3px; }
+  .c-name:active { opacity: 0.7; }
+  .v-sec { background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 14px; padding: 12px; margin-bottom: 10px; }
+  .v-sec-t { font-size: 12.5px; font-weight: 800; color: #1E3A8A; margin-bottom: 8px; }
+  .v-row { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; padding: 5px 0; border-bottom: 1px solid #EEF2F6; }
+  .v-row:last-child { border-bottom: none; }
+  .v-k { color: #64748B; font-weight: 600; flex-shrink: 0; }
+  .v-v { color: #0F172A; font-weight: 700; text-align: right; word-break: break-all; }
+
 </style>
 </head>
 <body>
@@ -597,6 +607,23 @@
   </div>
 </div>
 
+
+
+<!-- Customer Detail View Modal -->
+<div class="modal-bg" id="viewBg" onclick="if(event.target===this)closeViewModal()">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-hdr">
+      <h2 id="viewTitle">고객 상세 정보</h2>
+      <button class="close-x" onclick="closeViewModal()">✕</button>
+    </div>
+    <div id="viewBody"></div>
+    <div class="btn-row" style="margin-top:12px">
+      <button type="button" class="del-btn" style="background:#F1F5F9;color:#334155" onclick="closeViewModal()">닫기</button>
+      <button type="button" class="save-btn" id="viewEditBtn">✏️ 수정하기</button>
+    </div>
+  </div>
+</div>
 
 <!-- Password Settings Modal -->
 <div class="modal-bg" id="passBg" onclick="if(event.target===this)closePassModal()">
@@ -872,7 +899,7 @@ function render() {
       <div class="card">
         <div class="c-top">
           <div class="c-title">
-            <span class="c-name">${esc(x.name)}</span>
+            <span class="c-name" onclick="openViewModal('${x.id}')">${esc(x.name)}</span>
             <span class="pill tel-${esc(x.carrier)}">${esc(x.carrier)}</span>
             <span class="pill st-${esc(x.status)}" style="cursor:pointer" title="터치해서 상태 변경" onclick="cycleStatus('${x.id}')">${esc(stLabel)} ↻</span>
           </div>
@@ -1169,6 +1196,85 @@ function applyPasteFill() {
   }
   if (sims.length) { tempSims = sims; renderSims(); }
   showToast(filled ? `${filled}개 항목 자동 입력 완료!` : '인식된 항목이 없습니다. 형식을 확인해 주세요.');
+}
+
+
+function closeViewModal() { document.getElementById('viewBg').classList.remove('open'); }
+
+function openViewModal(id) {
+  const x = loadData().find(item => item.id === id);
+  if (!x) return;
+  document.getElementById('viewTitle').textContent = x.name || '고객 상세 정보';
+  const row = (k, v) => (v !== undefined && v !== null && String(v).trim() !== '' && v !== 0 && v !== '0원')
+    ? `<div class="v-row"><span class="v-k">${k}</span><span class="v-v">${esc(String(v))}</span></div>` : '';
+  const cleanPhone = (x.phone || '').replace(/[^0-9+]/g, '');
+
+  const sec1 = [
+    `<div class="v-row"><span class="v-k">연락처</span><span class="v-v"><a href="tel:${cleanPhone}" style="color:#2563EB;text-decoration:none">📞 ${esc(x.phone)}</a></span></div>`,
+    row('진행 상태', x.status === '보류취소' ? '보류/취소' : x.status),
+    row('개통일', x.openDate),
+    row('약정 만료일', x.expDate),
+    x.fee ? row('내 수수료', fmtMoney(x.fee) + (x.settled ? ' (정산완료)' : ' (미정산)')) : ''
+  ].filter(Boolean).join('');
+
+  const sec2 = [
+    row('주민번호', x.rrn),
+    row('설치주소', x.address),
+    row('자동이체 방식', x.payType),
+    row('자동이체 ①', x.payDetail),
+    row('자동이체 ②', x.payDetail2),
+    row('사은계좌', x.giftAccount),
+    row('상품권', x.voucher),
+    x.gift ? row('고객 현금사은품', x.gift + '만 원') : ''
+  ].filter(Boolean).join('');
+
+  const sec3 = [
+    row('가입통신사', x.carrier),
+    row('상품 유형', x.product),
+    row('신청상품', x.planName),
+    x.termMonths ? row('약정 기간', x.termMonths + '개월') : '',
+    row('AP 신청여부', x.ap),
+    x.monthlyFee ? row('월요금', fmtMoney(x.monthlyFee)) : '',
+    row('설치희망일', x.installWish),
+    x.installFee ? row('설치비(기사출동비)', fmtMoney(x.installFee)) : '',
+    row('현금지급처', x.cashPayer),
+    row('기타 ①', x.etc),
+    row('기타 ②', x.etc2)
+  ].filter(Boolean).join('');
+
+  const simsHtml = (x.sims && x.sims.length) ? `
+    <div class="v-sec">
+      <div class="v-sec-t">4. 휴대폰 유심 결합 (${x.sims.length}회선)</div>
+      ${x.sims.map((s, i) => `
+        <div style="padding:6px 0;border-bottom:1px solid #E2E8F0;font-size:12.5px">
+          <b>회선 ${i+1}</b> · ${esc(s.name||'-')} · ${esc(s.phone||'-')}<br>
+          <span style="color:#475569">${esc(s.rrn||'-')} | ${esc(s.carrier||'-')} | ${esc(s.plan||'-')} | ${esc(s.term||'-')}</span>
+        </div>
+      `).join('')}
+    </div>` : '';
+
+  const photosHtml = (x.photos && x.photos.length) ? `
+    <div class="v-sec">
+      <div class="v-sec-t">5. 첨부 사진 (${x.photos.length}장)</div>
+      <div class="photo-strip">${x.photos.map(p => `<img src="${p}" onclick="openLightbox(this.src)">`).join('')}</div>
+    </div>` : '';
+
+  const memoHtml = x.memo ? `
+    <div class="v-sec">
+      <div class="v-sec-t">6. 메모</div>
+      <div style="font-size:13px;color:#334155;white-space:pre-line;line-height:1.45">${esc(x.memo)}</div>
+    </div>` : '';
+
+  document.getElementById('viewBody').innerHTML = `
+    <div class="v-sec"><div class="v-sec-t">1. 기본 · 진행 요약</div>${sec1}</div>
+    ${sec2 ? `<div class="v-sec"><div class="v-sec-t">2. 고객 및 청구·결제 정보</div>${sec2}</div>` : ''}
+    ${sec3 ? `<div class="v-sec"><div class="v-sec-t">3. 인터넷·TV 상품 및 사은품</div>${sec3}</div>` : ''}
+    ${simsHtml}
+    ${photosHtml}
+    ${memoHtml}
+  `;
+  document.getElementById('viewEditBtn').onclick = () => { closeViewModal(); openModal(x.id); };
+  document.getElementById('viewBg').classList.add('open');
 }
 
 function openModal(id) {
