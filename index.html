@@ -489,7 +489,7 @@
 
     <details class="form-acc" open>
       <summary>2. 고객 및 청구·결제 정보</summary>
-      <div class="field"><label>주민번호</label><input id="fRrn" placeholder="000000-0000000"></div>
+      <div class="field"><label>주민번호</label><input id="fRrn" type="text" inputmode="numeric" maxlength="14" placeholder="000000-0000000" oninput="fmtRrnInput(this)"></div>
       <div class="field"><label>설치주소</label><input id="fAddress" placeholder="도로명/상세주소 입력"></div>
       <div class="field"><label>자동이체 방식</label>
         <div class="seg-chips" id="payTypeChips">
@@ -712,6 +712,10 @@ function dday(expDate) {
   return Math.round((tgt - now) / 86400000);
 }
 
+function fmtRrnInput(el) {
+  const d = el.value.replace(/[^0-9]/g, '').slice(0, 13);
+  el.value = d.length > 6 ? d.slice(0, 6) + '-' + d.slice(6) : d;
+}
 function fmtMoneyInput(el) {
   const digits = el.value.replace(/[^0-9]/g, '');
   el.value = digits ? Number(digits).toLocaleString('ko-KR') : '';
@@ -1088,7 +1092,7 @@ function renderSims() {
       </div>
       <div class="grid2">
         <div class="field"><label>성함</label><input value="${esc(s.name||'')}" oninput="tempSims[${i}].name=this.value" placeholder="성함"></div>
-        <div class="field"><label>주민등록번호</label><input value="${esc(s.rrn||'')}" oninput="tempSims[${i}].rrn=this.value" placeholder="000000-0000000"></div>
+        <div class="field"><label>주민등록번호</label><input type="text" inputmode="numeric" maxlength="14" value="${esc(s.rrn||'')}" oninput="fmtRrnInput(this);tempSims[${i}].rrn=this.value" placeholder="000000-0000000"></div>
       </div>
       <div class="grid2">
         <div class="field"><label>전화번호</label><input type="tel" value="${esc(s.phone||'')}" oninput="fmtPhoneInput(this);tempSims[${i}].phone=this.value" placeholder="010-0000-0000"></div>
@@ -1134,7 +1138,7 @@ function applyPasteFill() {
 
     if (k === '고객명' || k === '이름' || k === '성함') setVal('fName', v);
     else if (k === '연락처' || k === '전화번호' || k === '휴대폰') { setVal('fPhone', v); fmtPhoneInput(document.getElementById('fPhone')); }
-    else if (k === '주민번호' || k === '주민등록번호') setVal('fRrn', v);
+    else if (k === '주민번호' || k === '주민등록번호') { setVal('fRrn', v); fmtRrnInput(document.getElementById('fRrn')); }
     else if (k === '설치주소' || k === '주소') setVal('fAddress', v);
     else if (k === '자동이체방식' || k === '결제방식') {
       if (v.includes('카드')) syncChips('fPayType', 'payTypeChips', '신용카드');
