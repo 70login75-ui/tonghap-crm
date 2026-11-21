@@ -471,7 +471,7 @@
           <option value="보류취소">보류/취소</option>
         </select>
       </div>
-      <div class="field"><label>내 수수료 (원)</label><input id="fFee" type="number" placeholder="예: 250000"></div>
+      <div class="field"><label>내 수수료 (원)</label><input id="fFee" type="text" inputmode="numeric" placeholder="예: 250,000" oninput="fmtMoneyInput(this)"></div>
     </div>
     <div class="grid2">
       <div class="field"><label>개통일 (자동 +3년)</label>
@@ -507,7 +507,7 @@
       </div>
       <div class="grid2">
         <div class="field"><label>상품권</label><input id="fVoucher" placeholder="예: 신세계 10만"></div>
-        <div class="field"><label>고객 현금사은품 (만 원)</label><input id="fGift" type="number" placeholder="예: 50"></div>
+        <div class="field"><label>고객 현금사은품 (만 원)</label><input id="fGift" type="text" inputmode="numeric" placeholder="예: 50" oninput="fmtMoneyInput(this)"></div>
       </div>
     </details>
 
@@ -544,11 +544,11 @@
           </div>
           <input type="hidden" id="fAp" value="신청">
         </div>
-        <div class="field"><label>월요금 (원)</label><input id="fMonthlyFee" type="number" placeholder="예: 38500"></div>
+        <div class="field"><label>월요금 (원)</label><input id="fMonthlyFee" type="text" inputmode="numeric" placeholder="예: 38,500" oninput="fmtMoneyInput(this)"></div>
       </div>
       <div class="grid2">
         <div class="field"><label>설치희망일</label><input id="fInstallWish" type="date"></div>
-        <div class="field"><label>설치비·기사출동비 (원)</label><input id="fInstallFee" type="number" placeholder="예: 36300"></div>
+        <div class="field"><label>설치비·기사출동비 (원)</label><input id="fInstallFee" type="text" inputmode="numeric" placeholder="예: 36,300" oninput="fmtMoneyInput(this)"></div>
       </div>
       <div class="field"><label>현금지급처</label>
         <div class="seg-chips" id="cashPayerChips">
@@ -712,6 +712,14 @@ function dday(expDate) {
   return Math.round((tgt - now) / 86400000);
 }
 
+function fmtMoneyInput(el) {
+  const digits = el.value.replace(/[^0-9]/g, '');
+  el.value = digits ? Number(digits).toLocaleString('ko-KR') : '';
+}
+function numVal(id) {
+  const digits = (document.getElementById(id).value || '').replace(/[^0-9]/g, '');
+  return Number(digits) || 0;
+}
 function fmtMoney(n) { return n ? Number(n).toLocaleString('ko-KR') + '원' : '0원'; }
 
 function showToast(msg) {
@@ -1158,12 +1166,12 @@ function applyPasteFill() {
       syncChips('fAp', 'apChips', v.includes('미') ? '미신청' : '신청');
       filled++;
     }
-    else if (k === '월요금') setVal('fMonthlyFee', numOnly(v));
+    else if (k === '월요금') { const n = Number(numOnly(v)); setVal('fMonthlyFee', n ? n.toLocaleString('ko-KR') : ''); }
     else if (k === '설치희망일') {
       const dm = v.match(/(\d{4})[-./](\d{1,2})[-./](\d{1,2})/);
       if (dm) setVal('fInstallWish', `${dm[1]}-${dm[2].padStart(2,'0')}-${dm[3].padStart(2,'0')}`);
     }
-    else if (k === '설치비' || k === '기사출동비') setVal('fInstallFee', numOnly(v));
+    else if (k === '설치비' || k === '기사출동비') { const n = Number(numOnly(v)); setVal('fInstallFee', n ? n.toLocaleString('ko-KR') : ''); }
     else if (k === '상품권') setVal('fVoucher', v);
     else if (k === '고객현금사은품' || k === '현금사은품' || k === '사은품금액') {
       let n = Number(numOnly(v));
@@ -1174,7 +1182,7 @@ function applyPasteFill() {
       syncChips('fCashPayer', 'cashPayerChips', v.includes('웨이브') ? '웨이브넷 지급' : '유치자 직접지급');
       filled++;
     }
-    else if (k === '수수료' || k === '내수수료') setVal('fFee', numOnly(v));
+    else if (k === '수수료' || k === '내수수료') { const n = Number(numOnly(v)); setVal('fFee', n ? n.toLocaleString('ko-KR') : ''); }
     else if (k === '개통일') {
       const dm = v.match(/(\d{4})[-./](\d{1,2})[-./](\d{1,2})/);
       if (dm) { setVal('fOpenDate', `${dm[1]}-${dm[2].padStart(2,'0')}-${dm[3].padStart(2,'0')}`); autoExpiry(); }
@@ -1287,7 +1295,7 @@ function openModal(id) {
     document.getElementById('fName').value = item.name || '';
     document.getElementById('fPhone').value = item.phone || '';
     document.getElementById('fStatus').value = item.status || '상담중';
-    document.getElementById('fFee').value = item.fee || '';
+    document.getElementById('fFee').value = item.fee ? Number(item.fee).toLocaleString('ko-KR') : '';
     document.getElementById('fOpenDate').value = item.openDate || '';
     document.getElementById('fExpDate').value = item.expDate || '';
     document.getElementById('fSettled').checked = !!item.settled;
@@ -1303,11 +1311,11 @@ function openModal(id) {
     document.getElementById('fPlanName').value = item.planName || '';
     document.getElementById('fTermMonths').value = item.termMonths || '36';
     syncChips('fAp', 'apChips', item.ap || '신청');
-    document.getElementById('fMonthlyFee').value = item.monthlyFee || '';
+    document.getElementById('fMonthlyFee').value = item.monthlyFee ? Number(item.monthlyFee).toLocaleString('ko-KR') : '';
     document.getElementById('fInstallWish').value = item.installWish || '';
-    document.getElementById('fInstallFee').value = item.installFee || '';
+    document.getElementById('fInstallFee').value = item.installFee ? Number(item.installFee).toLocaleString('ko-KR') : '';
     document.getElementById('fVoucher').value = item.voucher || '';
-    document.getElementById('fGift').value = item.gift || '';
+    document.getElementById('fGift').value = item.gift ? Number(item.gift).toLocaleString('ko-KR') : '';
     syncChips('fCashPayer', 'cashPayerChips', item.cashPayer || '유치자 직접지급');
     document.getElementById('fEtc').value = item.etc || '';
     document.getElementById('fEtc2').value = item.etc2 || '';
@@ -1350,7 +1358,7 @@ function saveCustomer() {
   const rec = {
     id, name, phone,
     status: document.getElementById('fStatus').value,
-    fee: Number(document.getElementById('fFee').value) || 0,
+    fee: numVal('fFee'),
     openDate: document.getElementById('fOpenDate').value,
     expDate: document.getElementById('fExpDate').value,
     settled: document.getElementById('fSettled').checked,
@@ -1364,11 +1372,11 @@ function saveCustomer() {
     planName: document.getElementById('fPlanName').value.trim(),
     termMonths: Number(document.getElementById('fTermMonths').value) || 36,
     ap: document.getElementById('fAp').value,
-    monthlyFee: Number(document.getElementById('fMonthlyFee').value) || 0,
+    monthlyFee: numVal('fMonthlyFee'),
     installWish: document.getElementById('fInstallWish').value,
-    installFee: Number(document.getElementById('fInstallFee').value) || 0,
+    installFee: numVal('fInstallFee'),
     voucher: document.getElementById('fVoucher').value.trim(),
-    gift: Number(document.getElementById('fGift').value) || 0,
+    gift: numVal('fGift'),
     cashPayer: document.getElementById('fCashPayer').value,
     etc: document.getElementById('fEtc').value.trim(),
     etc2: document.getElementById('fEtc2').value.trim(),
