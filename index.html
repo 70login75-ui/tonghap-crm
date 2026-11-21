@@ -456,7 +456,7 @@
       <div class="field"><label>고객명 *</label>
         <div class="date-row">
           <input id="fName" placeholder="예: 홍길동">
-          <a id="modalCallBtn" class="today-btn" href="#" style="text-decoration:none;background:#ECFDF5;color:#047857;border-color:#A7F3D0;display:none;white-space:nowrap">📞 전화</a>
+          <a id="modalCallBtn" class="today-btn" href="#" onclick="return checkModalCall(event)" style="text-decoration:none;background:#ECFDF5;color:#047857;border-color:#A7F3D0;display:inline-flex;align-items:center;white-space:nowrap">📞 전화</a>
         </div>
       </div>
       <div class="field"><label>연락처 * (숫자만 입력)</label>
@@ -768,10 +768,20 @@ function syncModalCall() {
   const btn = document.getElementById('modalCallBtn');
   if (d.length >= 8) {
     btn.href = 'tel:' + d;
-    btn.style.display = 'inline-block';
+    btn.style.opacity = '1';
   } else {
-    btn.style.display = 'none';
+    btn.href = '#';
+    btn.style.opacity = '0.55';
   }
+}
+function checkModalCall(e) {
+  const d = document.getElementById('fPhone').value.replace(/\D/g, '');
+  if (d.length < 8) {
+    e.preventDefault();
+    showToast('먼저 연락처를 입력해 주세요.');
+    return false;
+  }
+  return true;
 }
 
 function pickChip(inputId, groupId, btn) {
