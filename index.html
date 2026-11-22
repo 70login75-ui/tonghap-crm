@@ -50,6 +50,21 @@
     display: flex; align-items: center; justify-content: center;
     font-weight: 900; font-size: 16px; color: #0B1120;
   }
+  /* 상단 로고: 살랑살랑 숨 쉬는 움직임 (v101) */
+  .logo-dot img {
+    animation: cloverFloat 3.4s ease-in-out infinite;
+    will-change: transform;
+    transform-origin: 50% 50%;
+  }
+  @keyframes cloverFloat {
+    0%, 100% { transform: rotate(-6deg) scale(0.96) translateY(0px); }
+    25%      { transform: rotate(0deg) scale(0.90) translateY(-1.2px); }
+    50%      { transform: rotate(6deg) scale(0.96) translateY(0px); }
+    75%      { transform: rotate(0deg) scale(0.90) translateY(-1.2px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .logo-dot img { animation: none; }
+  }
   .brand-txt { font-size: 20px; font-weight: 900; letter-spacing: -0.4px; }
   .brand-sub { font-size: 14px; color: #E2E8F0; font-weight: 800; margin-top: 2px; letter-spacing: -0.2px; }
   .icon-pill {
