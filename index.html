@@ -451,11 +451,7 @@
   </div>
 
   <div class="chips" id="chips">
-    <button class="chip active" data-f="전체" onclick="setFilter('전체',this)">전체</button>
-    <button class="chip" data-f="상담예약" onclick="openConsultModal()">상담 예약</button>
-    <button class="chip" data-f="만료임박" onclick="setFilter('만료임박',this)">약정임박(D-90)</button>
-    <button class="chip" data-f="개통완료" onclick="setFilter('개통완료',this)">개통완료</button>
-    <button class="chip" data-f="미정산" onclick="setFilter('미정산',this)">미정산</button>
+    <button class="chip" data-f="개통완료" onclick="setFilter(filter==='개통완료'?'전체':'개통완료',this)">개통완료</button>
   </div>
 
   <div class="bar-meta">
@@ -838,16 +834,15 @@ function showToast(msg) {
 
 function quickFilter(f) {
   const btn = document.querySelector(`.chip[data-f="${f}"]`);
-  if (btn) {
-    setFilter(f, btn);
-    showToast(f === '전체' ? '전체 고객 보기' : `${f} 고객만 보기`);
-  }
+  setFilter(f, btn);
+  showToast(f === '전체' ? '전체 고객 보기' : `${f} 고객만 보기`);
 }
 
 function setFilter(f, btn) {
   filter = f;
   document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-  if (btn) btn.classList.add('active');
+  const targetBtn = document.querySelector(`.chip[data-f="${f}"]`);
+  if (targetBtn) targetBtn.classList.add('active');
   document.querySelectorAll('.kpi').forEach(k => {
     k.classList.toggle('active', k.getAttribute('data-kf') === f);
   });
