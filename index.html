@@ -399,7 +399,8 @@
   }
   .cal-cell.empty { background:transparent; cursor:default; }
   .cal-cell.today { border-color:#93C5FD; background:#EFF6FF; }
-  .cal-cell.sel { border-color:#2563EB; background:#2563EB; color:#fff; }
+  .cal-red { color:#DC2626 !important; }
+  .cal-cell.sel { border-color:#2563EB; background:#2563EB; color:#fff !important; }
   .cal-badge { font-size:11px; font-weight:900; color:#DC2626; margin-top:1px; line-height:1; white-space:nowrap; overflow:hidden; max-width:100%; }
   .cal-cell.sel .cal-badge { color:#FEF08A; }
 </style>
@@ -1933,15 +1934,29 @@ function renderConsultList() {
 
   const grid = document.getElementById('calGrid');
   if (grid) {
-    const dows = ['일','월','화','수','목','금','토'].map(d => `<div class="cal-dow">${d}</div>`).join('');
+    const krHolidays = new Set([
+      '2026-01-01','2026-02-16','2026-02-17','2026-02-18','2026-03-01','2026-03-02',
+      '2026-05-05','2026-05-24','2026-05-25','2026-06-03','2026-06-06','2026-08-15',
+      '2026-08-17','2026-09-24','2026-09-25','2026-09-26','2026-10-03','2026-10-05',
+      '2026-10-09','2026-12-25',
+      '2027-01-01','2027-02-06','2027-02-07','2027-02-08','2027-02-09','2027-03-01',
+      '2027-05-05','2027-05-13','2027-06-06','2027-08-15','2027-08-16','2027-09-14',
+      '2027-09-15','2027-09-16','2027-10-03','2027-10-04','2027-10-09','2027-10-11',
+      '2027-12-25','2027-12-27'
+    ]);
+    const fixedSolar = new Set(['01-01','03-01','05-05','06-06','08-15','10-03','10-09','12-25']);
+    const dows = ['일','월','화','수','목','금','토'].map((d, idx) => `<div class="cal-dow${(idx===0||idx===6)?' cal-red':''}">${d}</div>`).join('');
     const firstDay = new Date(calYear, calMonth, 1).getDay();
     const lastDate = new Date(calYear, calMonth + 1, 0).getDate();
     let cells = dows;
     for (let i = 0; i < firstDay; i++) cells += '<div class="cal-cell empty"></div>';
     for (let d = 1; d <= lastDate; d++) {
       const ds = `${calYear}-${pad(calMonth+1)}-${pad(d)}`;
+      const dow = new Date(calYear, calMonth, d).getDay();
+      const isHoliday = dow === 0 || dow === 6 || krHolidays.has(ds) || fixedSolar.has(ds.slice(5));
       const dayItems = consults.filter(c => c.date === ds);
       const cls = ['cal-cell'];
+      if (isHoliday) cls.push('cal-red');
       if (ds === todayStr) cls.push('today');
       if (ds === selCalDate) cls.push('sel');
       const badge = dayItems.length ? `<span class="cal-badge">${dayItems.length}건</span>` : '';
