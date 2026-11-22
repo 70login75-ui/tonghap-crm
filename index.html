@@ -659,7 +659,7 @@
     <input type="file" id="cPhotoInput" accept="image/*" multiple style="display:none" onchange="handleConsultPhotos(event)">
     <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:6px;margin-bottom:14px">
       <button type="button" class="photo-btn" onclick="document.getElementById('cPhotoInput').click()" style="padding:11px 2px;font-size:12.5px;white-space:nowrap">🖼️ 사진 올리기</button>
-      <button type="button" class="photo-btn" onclick="openPhotoRoom()" style="padding:11px 2px;font-size:12px;white-space:nowrap;background:#EFF6FF;color:#1D4ED8;border-color:#BFDBFE">📷 사진방 (<span id="photoRoomCnt">0</span>)</button>
+      <button type="button" class="photo-btn" onclick="openPhotoRoom()" style="padding:11px 2px;font-size:12px;white-space:nowrap;background:#EFF6FF;color:#1D4ED8;border-color:#BFDBFE">📷 예약 사진방 (<span id="photoRoomCnt">0</span>)</button>
       <button type="button" id="voiceBtn" class="photo-btn" onclick="startVoiceConsult()" style="padding:11px 2px;font-size:12.5px;white-space:nowrap">🎤 음성 입력</button>
     </div>
     <button type="button" id="consultCancelBtn" class="btn-sm" style="display:none;margin-bottom:10px" onclick="cancelEditConsult()">수정 취소</button>
@@ -2191,7 +2191,7 @@ render();
   <div class="sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-hdr">
-      <h2>📷 사진 예약방</h2>
+      <h2>📷 예약 사진방</h2>
       <button class="close-x" onclick="closePhotoRoom()">✕</button>
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px">
