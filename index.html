@@ -1263,6 +1263,7 @@ function renderSims() {
         <div class="field"><label>요금제</label><input value="${esc(s.plan||'')}" oninput="tempSims[${i}].plan=this.value" placeholder="예: 5G 슬림"></div>
         <div class="field"><label>약정 기간</label><input value="${esc(s.term||'')}" oninput="tempSims[${i}].term=this.value" placeholder="예: 24개월"></div>
       </div>
+      <div class="field" style="margin-bottom:0"><label>자동이체</label><input value="${esc(s.autoPay||'')}" oninput="tempSims[${i}].autoPay=this.value" placeholder="예: 은행명 계좌번호 / 카드사"></div>
     </div>
   `).join('');
   btn.style.display = tempSims.length >= 4 ? 'none' : 'block';
@@ -1270,7 +1271,7 @@ function renderSims() {
 
 function addSimRow() {
   if (tempSims.length >= 4) return;
-  tempSims.push({name:'', rrn:'', phone:'', carrier:'', plan:'', term:''});
+  tempSims.push({name:'', rrn:'', phone:'', carrier:'', plan:'', term:'', autoPay:''});
   renderSims();
 }
 
@@ -1549,7 +1550,7 @@ function saveCustomer() {
     cashPayer: document.getElementById('fCashPayer').value,
     cashDirectAmt: unfmtMoney(document.getElementById('fCashDirectAmt').value),
     cashWaveAmt: unfmtMoney(document.getElementById('fCashWaveAmt').value),
-    sims: tempSims.filter(s => s.name || s.phone || s.carrier || s.plan),
+    sims: tempSims.filter(s => s.name || s.phone || s.carrier || s.plan || s.autoPay),
     photos: tempPhotos,
     memo: document.getElementById('fMemo').value.trim(),
     createdAt: Date.now()
