@@ -650,6 +650,18 @@
   </div>
 </div>
 
+<!-- Consult Detail View Sheet -->
+<div class="modal-bg" id="consultViewBg" onclick="if(event.target===this)closeConsultView()">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-hdr">
+      <h2 id="cvTitle">상담 예약 상세</h2>
+      <button class="close-x" onclick="closeConsultView()">✕</button>
+    </div>
+    <div id="cvBody"></div>
+  </div>
+</div>
+
 <!-- Data Management Sheet -->
 <div class="modal-bg" id="dataBg" onclick="if(event.target===this)closeDataModal()">
   <div class="sheet">
@@ -1597,6 +1609,34 @@ function cancelEditConsult() {
   if (document.getElementById('cMemo')) document.getElementById('cMemo').value = '';
 }
 
+function openConsultView(id) {
+  const c = consults.find(x => x.id === id);
+  if (!c) return;
+  const dt = [c.date, c.time].filter(Boolean).join(' ') || '날짜 미정';
+  const tel = (c.phone || '').replace(/\D/g, '');
+  document.getElementById('cvTitle').textContent = (c.name || '미상 고객') + ' · 상담 예약';
+  document.getElementById('cvBody').innerHTML = `
+    <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:14px;padding:14px;margin-bottom:14px">
+      <div class="v-row"><span class="v-k">예약 일시</span><span class="v-v" style="color:#2563EB">${esc(dt)}</span></div>
+      <div class="v-row"><span class="v-k">고객명</span><span class="v-v">${esc(c.name || '미상 고객')}</span></div>
+      <div class="v-row"><span class="v-k">연락처</span><span class="v-v">${esc(c.phone || '-')}</span></div>
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid #E2E8F0">
+        <div style="font-size:13px;font-weight:800;color:#475569;margin-bottom:6px">상담 내용</div>
+        <div style="font-size:14.5px;color:#0F172A;white-space:pre-wrap;line-height:1.55">${esc(c.memo || '(내용 없음)')}</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      ${tel ? `<a class="btn-sm" href="tel:${tel}" style="text-decoration:none;background:#ECFDF5;color:#047857;border-color:#A7F3D0;padding:11px 14px;font-size:14px">📞 전화</a>` : ''}
+      <button type="button" class="btn-save" style="flex:1;padding:12px;font-size:14.5px" onclick="closeConsultView();editConsult('${c.id}')">✏️ 수정하기</button>
+      <button type="button" class="btn-sm" style="padding:11px 14px;font-size:14px" onclick="closeConsultView();moveConsultToCustomer('${c.id}')">➕ 고객등록</button>
+    </div>
+  `;
+  document.getElementById('consultViewBg').classList.add('open');
+}
+function closeConsultView() {
+  document.getElementById('consultViewBg').classList.remove('open');
+}
+
 function editConsult(id) {
   const c = consults.find(x => x.id === id);
   if (!c) return;
@@ -1677,7 +1717,7 @@ function renderConsultList() {
   box.innerHTML = consults.map(c => {
     const dt = [c.date, c.time].filter(Boolean).join(' ');
     const tel = (c.phone || '').replace(/\D/g, '');
-    return `<div onclick="editConsult('${c.id}')" style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:11px 12px;cursor:pointer">
+    return `<div onclick="openConsultView('${c.id}')" style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:11px 12px;cursor:pointer">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
         <div style="font-size:14.5px;font-weight:800;color:#0F172A">${esc(c.name)} ${c.phone ? `<span style="font-size:12.5px;color:#475569;font-weight:600">(${esc(c.phone)})</span>` : ''}</div>
         <span style="font-size:12px;font-weight:700;color:#2563EB">${esc(dt || '날짜 미정')}</span>
