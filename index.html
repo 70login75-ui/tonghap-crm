@@ -947,7 +947,7 @@ function render() {
   const sortBy = document.getElementById('sortBy').value;
 
   document.getElementById('stTotal').textContent = data.length;
-  document.getElementById('stActive').textContent = data.filter(x => x.status === '상담중' || x.status === '접수완료').length;
+  const stActEl = document.getElementById('stActive'); if (stActEl) stActEl.textContent = data.filter(x => x.status === '미개통' || x.status === '상담중' || x.status === '접수완료').length;
   document.getElementById('stExpiring').textContent = data.filter(x => { const d = dday(x.expDate); return d !== null && d <= 90 && x.status !== '보류취소'; }).length;
   const unSettled = data.filter(x => !x.settled && x.status !== '보류취소').reduce((s, x) => s + (Number(x.fee)||0), 0);
   document.getElementById('stFee').textContent = fmtMoney(unSettled);
