@@ -1534,10 +1534,9 @@ updateLockPill();
 if (localStorage.getItem(PASS_KEY)) {
   document.getElementById('lockScreen').classList.add('open');
 }
-render();
 
-const CONSULT_KEY = 'tonghap_crm_consults_v1';
-let consults = [];
+var CONSULT_KEY = 'tonghap_crm_consults_v1';
+var consults = [];
 try { consults = JSON.parse(localStorage.getItem(CONSULT_KEY) || '[]'); } catch { consults = []; }
 function saveConsultStore() { localStorage.setItem(CONSULT_KEY, JSON.stringify(consults)); }
 
@@ -1704,6 +1703,8 @@ async function runConsultOcr(e) {
 }
 
 updateConsultKpi();
+
+render();
 </script>
 </body>
 </html>
