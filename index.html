@@ -1255,7 +1255,7 @@ function renderSims() {
         <div class="field"><label>성함</label><input value="${esc(s.name||'')}" oninput="tempSims[${i}].name=this.value" placeholder="성함"></div>
         <div class="field"><label>주민등록번호</label><input type="text" inputmode="numeric" maxlength="14" value="${esc(s.rrn||'')}" oninput="fmtRrnInput(this);tempSims[${i}].rrn=this.value" placeholder="000000-0000000"></div>
       </div>
-      <div class="grid2">
+      <div style="display:grid;grid-template-columns:1.55fr 1fr;gap:8px">
         <div class="field"><label>전화번호</label><input type="tel" value="${esc(s.phone||'')}" oninput="fmtPhoneInput(this);tempSims[${i}].phone=this.value" placeholder="010-0000-0000"></div>
         <div class="field"><label>기존 통신사</label><input value="${esc(s.carrier||'')}" oninput="tempSims[${i}].carrier=this.value" placeholder="예: SKT"></div>
       </div>
