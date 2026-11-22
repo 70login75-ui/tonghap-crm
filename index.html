@@ -1595,6 +1595,32 @@ function saveConsult() {
   });
   saveConsultStore();
   updateConsultKpi();
+
+(function handleUrlConsult() {
+  try {
+    const sp = new URLSearchParams(location.search);
+    const raw = sp.get('add_consult');
+    if (!raw) return;
+    const obj = JSON.parse(raw);
+    const exists = consults.some(c => c.name === (obj.name||'') && c.phone === (obj.phone||'') && c.date === (obj.date||'') && c.time === (obj.time||''));
+    if (!exists) {
+      consults.unshift({
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        date: obj.date || '',
+        time: obj.time || '',
+        name: obj.name || '미상 고객',
+        phone: obj.phone || '',
+        memo: obj.memo || '',
+        createdAt: Date.now()
+      });
+      saveConsultStore();
+      updateConsultKpi();
+    }
+    history.replaceState(null, '', location.pathname);
+    setTimeout(() => { openConsultModal(); showToast('상담 예약에 등록되었습니다.'); }, 200);
+  } catch {}
+})();
+
   document.getElementById('cName').value = '';
   document.getElementById('cPhone').value = '';
   document.getElementById('cMemo').value = '';
