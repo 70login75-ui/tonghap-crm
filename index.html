@@ -477,18 +477,18 @@
 
 <!-- Add / Edit Customer Sheet -->
 <div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
-  <div class="sheet">
-    <div class="sheet-handle"></div>
-    <div class="sheet-hdr">
-      <h2 id="modalTitle">새 고객 등록</h2>
+  <div class="sheet" style="padding-top:28px">
+    <div class="sheet-handle" style="margin-bottom:16px"></div>
+    <div class="sheet-hdr" style="margin-bottom:4px">
+      <h2 id="modalTitle" style="font-size:22px;font-weight:900">새 고객 등록</h2>
       <button class="close-x" onclick="closeModal()">✕</button>
     </div>
     <input type="hidden" id="editId">
 
-    <details class="form-acc" open style="background:#EFF6FF;border-color:#93C5FD;border-width:1.5px">
+    <details class="form-acc" open style="background:#EFF6FF;border-color:#93C5FD;border-width:1.5px;margin-top:0">
       <summary style="color:#1E40AF">📋 붙여넣기로 한 번에 채우기 (사진 정리본 붙여넣기)</summary>
       <div class="field" style="margin-bottom:8px">
-        <textarea id="pasteBox" rows="3" placeholder="제가 사진 보고 정리해 드린 내용을 그대로 붙여넣고 아래 버튼을 누르세요."></textarea>
+        <textarea id="pasteBox" rows="2" style="min-height:48px;padding:8px 10px" placeholder="제가 사진 보고 정리해 드린 내용을 그대로 붙여넣고 아래 버튼을 누르세요."></textarea>
       </div>
       <button type="button" class="add-sim-btn" style="background:#2563EB;color:#fff;border:none" onclick="applyPasteFill()">✨ 각 칸에 자동 채우기</button>
     </details>
