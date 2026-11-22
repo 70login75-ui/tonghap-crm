@@ -398,7 +398,7 @@
   </div>
   <div class="kpi-grid">
     <div class="kpi active" data-kf="전체" onclick="quickFilter('전체')"><div class="v" id="stTotal">0</div><div class="k">전체 고객</div></div>
-    <div class="kpi" data-kf="상담·접수" onclick="quickFilter('상담·접수')"><div class="v" id="stActive">0</div><div class="k">상담·접수</div></div>
+    <div class="kpi" data-kf="상담예약" onclick="openConsultModal()"><div class="v" id="stConsult">0</div><div class="k">상담 예약</div></div>
     <div class="kpi warn" data-kf="만료임박" onclick="quickFilter('만료임박')"><div class="v" id="stExpiring">0</div><div class="k">약정임박</div></div>
     <div class="kpi money" data-kf="미정산" onclick="quickFilter('미정산')"><div class="v" id="stFee">0원</div><div class="k">미정산</div></div>
   </div>
@@ -592,6 +592,39 @@
   </div>
 </div>
 
+<!-- Consult Reservation Sheet -->
+<div class="modal-bg" id="consultBg" onclick="if(event.target===this)closeConsultModal()">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-hdr">
+      <h2>📅 상담 예약</h2>
+      <button class="close-x" onclick="closeConsultModal()">✕</button>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>예약 날짜</label><input id="cDate" type="date"></div>
+      <div class="field"><label>예약 시간</label><input id="cTime" type="time"></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>고객명</label><input id="cName" placeholder="예: 홍길동"></div>
+      <div class="field"><label>연락처</label><input id="cPhone" type="tel" placeholder="010-1234-5678" oninput="fmtPhoneInput(this)"></div>
+    </div>
+    <div class="field">
+      <label>상담 내용 (텍스트 · 음성 · 사진 변환)</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <button type="button" id="voiceBtn" class="photo-btn" onclick="startVoiceConsult()" style="padding:11px;font-size:13.5px">🎤 음성 입력</button>
+        <button type="button" class="photo-btn" onclick="document.getElementById('ocrInput').click()" style="padding:11px;font-size:13.5px">📷 사진→텍스트</button>
+      </div>
+      <input type="file" id="ocrInput" accept="image/*" style="display:none" onchange="runConsultOcr(event)">
+      <div id="ocrStatus" style="display:none;font-size:12.5px;color:#2563EB;font-weight:700;margin-bottom:6px"></div>
+      <textarea id="cMemo" rows="4" placeholder="상담 예약 내용을 직접 입력하거나, 음성 입력 / 사진→텍스트 버튼을 눌러 채우세요."></textarea>
+    </div>
+    <button class="btn-save" style="margin-top:6px" onclick="saveConsult()">상담 예약 저장</button>
+
+    <div class="sec-lbl" style="margin-top:18px">예약 목록 (<span id="consultCountTxt">0</span>건)</div>
+    <div id="consultList" style="display:flex;flex-direction:column;gap:8px;margin-top:8px"></div>
+  </div>
+</div>
+
 <!-- Data Management Sheet -->
 <div class="modal-bg" id="dataBg" onclick="if(event.target===this)closeDataModal()">
   <div class="sheet">
@@ -751,7 +784,176 @@ function setFilter(f, btn) {
   document.querySelectorAll('.kpi').forEach(k => {
     k.classList.toggle('active', k.getAttribute('data-kf') === f);
   });
-  render();
+  
+const CONSULT_KEY = 'tonghap_crm_consults_v1';
+let consults = [];
+try { consults = JSON.parse(localStorage.getItem(CONSULT_KEY) || '[]'); } catch { consults = []; }
+function saveConsultStore() { localStorage.setItem(CONSULT_KEY, JSON.stringify(consults)); }
+
+function updateConsultKpi() {
+  const el = document.getElementById('stConsult');
+  if (el) el.textContent = consults.length;
+}
+
+function openConsultModal() {
+  const now = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  if (!document.getElementById('cDate').value) {
+    document.getElementById('cDate').value = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+  }
+  renderConsultList();
+  document.getElementById('consultBg').classList.add('open');
+}
+function closeConsultModal() {
+  if (window._recog) { try { window._recog.stop(); } catch {} }
+  document.getElementById('consultBg').classList.remove('open');
+}
+
+function saveConsult() {
+  const date = document.getElementById('cDate').value;
+  const time = document.getElementById('cTime').value;
+  const name = document.getElementById('cName').value.trim();
+  const phone = document.getElementById('cPhone').value.trim();
+  const memo = document.getElementById('cMemo').value.trim();
+  if (!name && !memo) { toast('고객명 또는 상담 내용을 입력해 주세요.'); return; }
+  consults.unshift({
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    date, time, name: name || '미상 고객', phone, memo, createdAt: Date.now()
+  });
+  saveConsultStore();
+  updateConsultKpi();
+  document.getElementById('cName').value = '';
+  document.getElementById('cPhone').value = '';
+  document.getElementById('cMemo').value = '';
+  renderConsultList();
+  toast('상담 예약이 저장되었습니다.');
+}
+
+function delConsult(id) {
+  consults = consults.filter(x => x.id !== id);
+  saveConsultStore();
+  updateConsultKpi();
+  renderConsultList();
+  toast('삭제되었습니다.');
+}
+
+function moveConsultToCustomer(id) {
+  const c = consults.find(x => x.id === id);
+  if (!c) return;
+  closeConsultModal();
+  openAddModal();
+  document.getElementById('fName').value = c.name === '미상 고객' ? '' : c.name;
+  document.getElementById('fPhone').value = c.phone || '';
+  document.getElementById('fMemo').value = `[상담예약 ${c.date || ''} ${c.time || ''}]\n${c.memo || ''}`.trim();
+  syncModalCall();
+  toast('새 고객 등록 창으로 옮겼습니다.');
+}
+
+function renderConsultList() {
+  const box = document.getElementById('consultList');
+  const cnt = document.getElementById('consultCountTxt');
+  if (cnt) cnt.textContent = consults.length;
+  if (!consults.length) {
+    box.innerHTML = '<div style="text-align:center;color:#94A3B8;font-size:13px;padding:18px 0">등록된 상담 예약이 없습니다.</div>';
+    return;
+  }
+  box.innerHTML = consults.map(c => {
+    const dt = [c.date, c.time].filter(Boolean).join(' ');
+    const tel = (c.phone || '').replace(/\D/g, '');
+    return `<div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:11px 12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
+        <div style="font-size:14.5px;font-weight:800;color:#0F172A">${esc(c.name)} ${c.phone ? `<span style="font-size:12.5px;color:#475569;font-weight:600">(${esc(c.phone)})</span>` : ''}</div>
+        <span style="font-size:12px;font-weight:700;color:#2563EB">${esc(dt || '날짜 미정')}</span>
+      </div>
+      ${c.memo ? `<div style="font-size:13.5px;color:#334155;margin-top:6px;white-space:pre-wrap;line-height:1.45">${esc(c.memo)}</div>` : ''}
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+        ${tel ? `<a class="btn-sm" href="tel:${tel}" style="text-decoration:none;background:#ECFDF5;color:#047857;border-color:#A7F3D0">📞 전화</a>` : ''}
+        <button type="button" class="btn-sm" onclick="moveConsultToCustomer('${c.id}')">➕ 고객등록</button>
+        <button type="button" class="btn-sm del" onclick="delConsult('${c.id}')">삭제</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function startVoiceConsult() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const btn = document.getElementById('voiceBtn');
+  if (!SR) {
+    toast('이 브라우저에서는 음성인식이 지원되지 않아요. 크롬을 이용해 보세요.');
+    return;
+  }
+  if (window._recogActive && window._recog) {
+    window._recog.stop();
+    return;
+  }
+  const recog = new SR();
+  recog.lang = 'ko-KR';
+  recog.interimResults = false;
+  recog.continuous = false;
+  window._recog = recog;
+  window._recogActive = true;
+  btn.textContent = '🔴 듣는 중... (누르면 중지)';
+  recog.onresult = (e) => {
+    const txt = Array.from(e.results).map(r => r[0].transcript).join(' ').trim();
+    if (txt) {
+      const box = document.getElementById('cMemo');
+      box.value = box.value ? (box.value + '\n' + txt) : txt;
+      toast('음성이 텍스트로 입력되었습니다.');
+    }
+  };
+  recog.onerror = () => {
+    toast('음성 인식에 실패했습니다. 마이크 권한을 확인해 주세요.');
+  };
+  recog.onend = () => {
+    window._recogActive = false;
+    btn.textContent = '🎤 음성 입력';
+  };
+  recog.start();
+}
+
+function loadTesseract() {
+  return new Promise((resolve, reject) => {
+    if (window.Tesseract) return resolve(window.Tesseract);
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+    s.onload = () => resolve(window.Tesseract);
+    s.onerror = () => reject(new Error('OCR 엔진 로드 실패'));
+    document.head.appendChild(s);
+  });
+}
+
+async function runConsultOcr(e) {
+  const file = e.target.files && e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  const st = document.getElementById('ocrStatus');
+  st.style.display = 'block';
+  st.textContent = '📷 사진에서 글자를 읽고 있습니다... (첫 실행은 5~10초 걸릴 수 있어요)';
+  try {
+    const T = await loadTesseract();
+    const res = await T.recognize(file, 'kor+eng', {
+      logger: m => {
+        if (m.status === 'recognizing text' && typeof m.progress === 'number') {
+          st.textContent = `📷 글자 변환 중... ${Math.round(m.progress * 100)}%`;
+        }
+      }
+    });
+    const text = (res.data && res.data.text || '').trim();
+    if (text) {
+      const box = document.getElementById('cMemo');
+      box.value = box.value ? (box.value + '\n' + text) : text;
+      st.textContent = '✅ 사진 글자를 입력 칸에 넣었습니다. 오타만 살짝 확인해 주세요!';
+      toast('사진 텍스트 변환 완료!');
+    } else {
+      st.textContent = '⚠️ 사진에서 글자를 찾지 못했습니다. 더 선명하게 찍어 보세요.';
+    }
+  } catch (err) {
+    st.textContent = '⚠️ 사진 변환 중 오류가 났습니다. 인터넷 연결을 확인해 주세요.';
+  }
+}
+
+updateConsultKpi();
+render();
 }
 
 function esc(s) {
