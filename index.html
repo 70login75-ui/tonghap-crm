@@ -509,7 +509,7 @@
       </div>
       <div class="grid2">
         <div class="field"><label>상품권</label><input id="fVoucher" placeholder="예: 신세계 10만"></div>
-        <div class="field"><label style="color:#2563EB">고객 현금사은품 (만 원)</label><input id="fGift" type="text" inputmode="numeric" placeholder="예: 50" oninput="fmtMoneyInput(this)"></div>
+        <div class="field"><label style="color:#2563EB">고객 현금사은품 (원)</label><input id="fGift" type="text" inputmode="numeric" placeholder="예: 500,000" oninput="fmtMoneyInput(this)"></div>
       </div>
     </details>
 
@@ -1247,7 +1247,7 @@ function openViewModal(id) {
     row('자동이체', [x.payDetail, x.payDetail2].filter(Boolean).join(' / ')),
     row('사은계좌', x.giftAccount),
     row('상품권', x.voucher),
-    x.gift ? row('고객 현금사은품', x.gift + '만 원') : ''
+    x.gift ? row('고객 현금사은품', Number(x.gift).toLocaleString('ko-KR') + '원') : ''
   ].filter(Boolean).join('');
 
   const sec3 = [
@@ -1451,7 +1451,7 @@ function downloadICS(id) {
 
 function exportCSV() {
   const data = loadData();
-  const hdr = ['고객명','연락처','주민번호','설치주소','자동이체방식','자동이체','사은계좌','통신사','상품유형','신청상품','약정개월','AP신청','월요금','설치희망일','설치비','상품권','현금사은품(만원)','현금지급처','기타1','기타2','유심결합수','개통일','약정만료일','상태','수수료(원)','정산여부','사진수','메모'];
+  const hdr = ['고객명','연락처','주민번호','설치주소','자동이체방식','자동이체','사은계좌','통신사','상품유형','신청상품','약정개월','AP신청','월요금','설치희망일','설치비','상품권','현금사은품(원)','현금지급처','기타1','기타2','유심결합수','개통일','약정만료일','상태','수수료(원)','정산여부','사진수','메모'];
   const lines = [hdr.join(',')].concat(data.map(x => [
     x.name, x.phone, x.rrn, x.address, x.payType, [x.payDetail, x.payDetail2].filter(Boolean).join(' / '), x.giftAccount,
     x.carrier, x.product, x.planName, x.termMonths, x.ap, x.monthlyFee, x.installWish, x.installFee,
