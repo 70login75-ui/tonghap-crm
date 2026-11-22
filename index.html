@@ -504,7 +504,7 @@
       <div class="field"><label>자동이체 (카드: 카드사/번호/유효기간/카드주 · 계좌: 은행/번호/예금주)</label>
         <textarea id="fPayDetail" rows="2" placeholder="첫째 줄: 은행명·예금주 (또는 카드사·카드주)&#10;둘째 줄: 계좌번호 (또는 카드번호·유효기간)"></textarea>
       </div>
-      <div class="field"><label>사은계좌 (유치자 지급은 미기재)</label>
+      <div class="field"><label style="color:#2563EB">사은계좌 (유치자 지급은 미기재)</label>
         <input id="fGiftAccount" placeholder="웨이브넷 지급 시에만 기재">
       </div>
       <div class="grid2">
@@ -578,7 +578,7 @@
       <button type="button" class="photo-btn" onclick="document.getElementById('galInput').click()">🖼️ 갤러리 업로드</button>
     </div>
     <input type="file" id="camInput" accept="image/*" capture="environment" style="display:none" onchange="handlePhotos(event)">
-    <input type="file" id="galInput" accept="image/png,image/jpeg,image/jpg,image/webp,image/heic,image/gif" multiple style="display:none" onchange="handlePhotos(event)">
+    <input type="file" id="galInput" accept="image/*" multiple style="display:none" onchange="handlePhotos(event)">
     <div class="preview-grid" id="pvGrid"></div>
 
     <div class="sec-lbl">6. 메모</div>
