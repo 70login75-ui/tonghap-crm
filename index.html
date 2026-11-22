@@ -643,7 +643,7 @@
       <div id="ocrStatus" style="display:none;font-size:12.5px;color:#2563EB;font-weight:700;margin-bottom:6px"></div>
       <textarea id="cMemo" rows="4" placeholder="상담 예약 내용을 직접 입력하거나, 음성 입력 / 사진→텍스트 버튼을 눌러 채우세요."></textarea>
     </div>
-    <div style="display:flex;justify-content:flex-end;margin-top:6px;margin-bottom:14px"><button class="btn-save" style="width:auto;padding:12px 18px;font-size:14.5px;font-weight:800;border-radius:12px" onclick="saveConsult()">상담 예약 저장</button></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px;margin-bottom:14px"><button type="button" id="consultCancelBtn" class="btn-sm" style="display:none;padding:10px 14px;font-size:13.5px" onclick="cancelEditConsult()">수정 취소</button><button type="button" id="consultSaveBtn" class="btn-save" style="width:auto;padding:12px 18px;font-size:14.5px;font-weight:800;border-radius:12px" onclick="saveConsult()">상담 예약 저장</button></div>
 
     <div class="sec-lbl" style="margin-top:18px">예약 목록 (<span id="consultCountTxt">0</span>건)</div>
     <div id="consultList" style="display:flex;flex-direction:column;gap:8px;margin-top:8px"></div>
@@ -1577,9 +1577,42 @@ function openConsultModal() {
   renderConsultList();
   document.getElementById('consultBg').classList.add('open');
 }
+var editingConsultId = null;
+
 function closeConsultModal() {
-  if (window._recog) { try { window._recog.stop(); } catch {} }
+  if (window._recogActive) stopVoiceConsult();
+  cancelEditConsult();
   document.getElementById('consultBg').classList.remove('open');
+}
+
+function cancelEditConsult() {
+  editingConsultId = null;
+  const sb = document.getElementById('consultSaveBtn');
+  const cb = document.getElementById('consultCancelBtn');
+  if (sb) sb.textContent = '상담 예약 저장';
+  if (cb) cb.style.display = 'none';
+  if (document.getElementById('cName')) document.getElementById('cName').value = '';
+  if (document.getElementById('cPhone')) document.getElementById('cPhone').value = '';
+  if (document.getElementById('cTime')) document.getElementById('cTime').value = '';
+  if (document.getElementById('cMemo')) document.getElementById('cMemo').value = '';
+}
+
+function editConsult(id) {
+  const c = consults.find(x => x.id === id);
+  if (!c) return;
+  editingConsultId = id;
+  document.getElementById('cDate').value = c.date || '';
+  document.getElementById('cTime').value = c.time || '';
+  document.getElementById('cName').value = c.name === '미상 고객' ? '' : (c.name || '');
+  document.getElementById('cPhone').value = c.phone || '';
+  document.getElementById('cMemo').value = c.memo || '';
+  const sb = document.getElementById('consultSaveBtn');
+  const cb = document.getElementById('consultCancelBtn');
+  if (sb) sb.textContent = '수정 내용 저장';
+  if (cb) cb.style.display = 'inline-block';
+  const sheet = document.querySelector('#consultBg .sheet');
+  if (sheet) sheet.scrollTo({ top: 0, behavior: 'smooth' });
+  showToast('내용을 수정한 뒤 저장을 누르세요.');
 }
 
 function saveConsult() {
@@ -1589,46 +1622,31 @@ function saveConsult() {
   const phone = document.getElementById('cPhone').value.trim();
   const memo = document.getElementById('cMemo').value.trim();
   if (!name && !memo) { showToast('고객명 또는 상담 내용을 입력해 주세요.'); return; }
+  if (editingConsultId) {
+    const idx = consults.findIndex(x => x.id === editingConsultId);
+    if (idx !== -1) {
+      consults[idx] = { ...consults[idx], date, time, name: name || '미상 고객', phone, memo };
+    }
+    saveConsultStore();
+    updateConsultKpi();
+    cancelEditConsult();
+    renderConsultList();
+    showToast('상담 예약이 수정되었습니다.');
+    return;
+  }
   consults.unshift({
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
     date, time, name: name || '미상 고객', phone, memo, createdAt: Date.now()
   });
   saveConsultStore();
   updateConsultKpi();
-
-(function handleUrlConsult() {
-  try {
-    const sp = new URLSearchParams(location.search);
-    const raw = sp.get('add_consult');
-    if (!raw) return;
-    const obj = JSON.parse(raw);
-    const exists = consults.some(c => c.name === (obj.name||'') && c.phone === (obj.phone||'') && c.date === (obj.date||'') && c.time === (obj.time||''));
-    if (!exists) {
-      consults.unshift({
-        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-        date: obj.date || '',
-        time: obj.time || '',
-        name: obj.name || '미상 고객',
-        phone: obj.phone || '',
-        memo: obj.memo || '',
-        createdAt: Date.now()
-      });
-      saveConsultStore();
-      updateConsultKpi();
-    }
-    history.replaceState(null, '', location.pathname);
-    setTimeout(() => { openConsultModal(); showToast('상담 예약에 등록되었습니다.'); }, 200);
-  } catch {}
-})();
-
-  document.getElementById('cName').value = '';
-  document.getElementById('cPhone').value = '';
-  document.getElementById('cMemo').value = '';
+  cancelEditConsult();
   renderConsultList();
   showToast('상담 예약이 저장되었습니다.');
 }
 
 function delConsult(id) {
+  if (editingConsultId === id) cancelEditConsult();
   consults = consults.filter(x => x.id !== id);
   saveConsultStore();
   updateConsultKpi();
@@ -1659,14 +1677,15 @@ function renderConsultList() {
   box.innerHTML = consults.map(c => {
     const dt = [c.date, c.time].filter(Boolean).join(' ');
     const tel = (c.phone || '').replace(/\D/g, '');
-    return `<div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:11px 12px">
+    return `<div onclick="editConsult('${c.id}')" style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:11px 12px;cursor:pointer">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
         <div style="font-size:14.5px;font-weight:800;color:#0F172A">${esc(c.name)} ${c.phone ? `<span style="font-size:12.5px;color:#475569;font-weight:600">(${esc(c.phone)})</span>` : ''}</div>
         <span style="font-size:12px;font-weight:700;color:#2563EB">${esc(dt || '날짜 미정')}</span>
       </div>
       ${c.memo ? `<div style="font-size:13.5px;color:#334155;margin-top:6px;white-space:pre-wrap;line-height:1.45">${esc(c.memo)}</div>` : ''}
-      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap" onclick="event.stopPropagation()">
         ${tel ? `<a class="btn-sm" href="tel:${tel}" style="text-decoration:none;background:#ECFDF5;color:#047857;border-color:#A7F3D0">📞 전화</a>` : ''}
+        <button type="button" class="btn-sm" onclick="editConsult('${c.id}')">✏️ 확인·수정</button>
         <button type="button" class="btn-sm" onclick="moveConsultToCustomer('${c.id}')">➕ 고객등록</button>
         <button type="button" class="btn-sm del" onclick="delConsult('${c.id}')">삭제</button>
       </div>
@@ -1853,6 +1872,33 @@ async function runConsultOcr(e) {
 updateConsultKpi();
 
 render();
+
+
+(function handleUrlConsult() {
+  try {
+    const sp = new URLSearchParams(location.search);
+    const raw = sp.get('add_consult');
+    if (!raw) return;
+    const obj = JSON.parse(raw);
+    const exists = consults.some(c => c.name === (obj.name||'') && c.phone === (obj.phone||'') && c.date === (obj.date||'') && c.time === (obj.time||''));
+    if (!exists) {
+      consults.unshift({
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        date: obj.date || '',
+        time: obj.time || '',
+        name: obj.name || '미상 고객',
+        phone: obj.phone || '',
+        memo: obj.memo || '',
+        createdAt: Date.now()
+      });
+      saveConsultStore();
+      updateConsultKpi();
+    }
+    history.replaceState(null, '', location.pathname);
+    setTimeout(() => { openConsultModal(); showToast('상담 예약에 등록되었습니다.'); }, 200);
+  } catch {}
+})();
+
 </script>
 </body>
 </html>
