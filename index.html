@@ -1659,6 +1659,7 @@ function setVoiceWaveUI(active, speaking, liveTxt) {
 
 function stopVoiceConsult() {
   const btn = document.getElementById('voiceBtn');
+  window._userStoppedVoice = true;
   window._recogActive = false;
   if (btn) btn.textContent = '🎤 음성 입력';
   setVoiceWaveUI(false, false);
@@ -1667,6 +1668,57 @@ function stopVoiceConsult() {
     try { r.stop(); } catch {}
     setTimeout(() => { try { r.abort(); } catch {} }, 250);
   }
+}
+
+function launchVoiceSession() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const btn = document.getElementById('voiceBtn');
+  const recog = new SR();
+  recog.lang = 'ko-KR';
+  recog.interimResults = true;
+  recog.continuous = true;
+  window._recog = recog;
+  recog.onspeechstart = () => {
+    if (window._recogActive) setVoiceWaveUI(true, true, '목소리 감지됨...');
+  };
+  recog.onspeechend = () => {
+    if (window._recogActive) setVoiceWaveUI(true, false, '계속 듣고 있어요... (끝내려면 🔴 중지)');
+  };
+  recog.onresult = (e) => {
+    let finalTxt = '', interimTxt = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const t = e.results[i][0].transcript;
+      if (e.results[i].isFinal) finalTxt += t + ' ';
+      else interimTxt += t;
+    }
+    if (interimTxt && window._recogActive) setVoiceWaveUI(true, true, interimTxt.trim());
+    finalTxt = finalTxt.trim();
+    if (finalTxt) {
+      const box = document.getElementById('cMemo');
+      box.value = box.value ? (box.value + ' ' + finalTxt) : finalTxt;
+    }
+  };
+  recog.onerror = (ev) => {
+    if (!ev) return;
+    if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed' || ev.error === 'audio-capture') {
+      stopVoiceConsult();
+      showToast('마이크 권한을 허용해 주세요.');
+    }
+  };
+  recog.onend = () => {
+    if (window._recogActive && !window._userStoppedVoice) {
+      setTimeout(() => {
+        if (window._recogActive && !window._userStoppedVoice) {
+          try { launchVoiceSession(); } catch { stopVoiceConsult(); }
+        }
+      }, 150);
+      return;
+    }
+    window._recogActive = false;
+    if (btn) btn.textContent = '🎤 음성 입력';
+    setVoiceWaveUI(false, false);
+  };
+  recog.start();
 }
 
 function startVoiceConsult() {
@@ -1681,46 +1733,12 @@ function startVoiceConsult() {
     showToast('음성 입력을 중지했습니다.');
     return;
   }
-  const recog = new SR();
-  recog.lang = 'ko-KR';
-  recog.interimResults = true;
-  recog.continuous = false;
-  window._recog = recog;
+  window._userStoppedVoice = false;
   window._recogActive = true;
   btn.textContent = '🔴 중지';
-  setVoiceWaveUI(true, false, '듣고 있어요... 말씀해 주세요');
-  recog.onspeechstart = () => setVoiceWaveUI(true, true, '목소리 감지됨...');
-  recog.onspeechend = () => setVoiceWaveUI(true, false, '정리 중...');
-  recog.onresult = (e) => {
-    let finalTxt = '', interimTxt = '';
-    for (let i = e.resultIndex; i < e.results.length; i++) {
-      const t = e.results[i][0].transcript;
-      if (e.results[i].isFinal) finalTxt += t + ' ';
-      else interimTxt += t;
-    }
-    if (interimTxt) setVoiceWaveUI(true, true, interimTxt.trim());
-    finalTxt = finalTxt.trim();
-    if (finalTxt) {
-      const box = document.getElementById('cMemo');
-      box.value = box.value ? (box.value + '\n' + finalTxt) : finalTxt;
-      showToast('음성이 텍스트로 입력되었습니다.');
-    }
-  };
-  recog.onerror = (ev) => {
-    window._recogActive = false;
-    if (btn) btn.textContent = '🎤 음성 입력';
-    setVoiceWaveUI(false, false);
-    if (ev && ev.error !== 'aborted') {
-      showToast('음성 인식에 실패했습니다. 마이크 권한을 확인해 주세요.');
-    }
-  };
-  recog.onend = () => {
-    window._recogActive = false;
-    if (btn) btn.textContent = '🎤 음성 입력';
-    setVoiceWaveUI(false, false);
-  };
+  setVoiceWaveUI(true, false, '듣고 있어요... (끝내려면 🔴 중지)');
   try {
-    recog.start();
+    launchVoiceSession();
   } catch {
     stopVoiceConsult();
     showToast('음성 인식을 시작하지 못했습니다.');
