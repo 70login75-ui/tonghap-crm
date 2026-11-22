@@ -1833,6 +1833,11 @@ function selectCalDate(ds) {
   const cd = document.getElementById('cDate');
   if (cd) cd.value = ds;
   renderConsultList();
+  const memo = document.getElementById('cMemo');
+  if (memo) {
+    memo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => memo.focus(), 120);
+  }
 }
 
 function renderConsultList() {
