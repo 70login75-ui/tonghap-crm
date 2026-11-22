@@ -634,7 +634,10 @@
     <div class="sheet-handle"></div>
     <div class="sheet-hdr">
       <h2>📅 상담 예약</h2>
-      <button class="close-x" onclick="closeConsultModal()">✕</button>
+      <div style="display:flex;align-items:center;gap:6px">
+        <button type="button" class="btn-sm" onclick="openPhotoRoom()" style="background:#EFF6FF;color:#1D4ED8;border-color:#BFDBFE;font-weight:800;padding:6px 10px">📷 사진 예약방 (<span id="photoRoomCnt">0</span>)</button>
+        <button class="close-x" onclick="closeConsultModal()">✕</button>
+      </div>
     </div>
     <div class="grid2">
       <div class="field"><label>예약 날짜</label><input id="cDate" type="date"></div>
@@ -1606,6 +1609,7 @@ function updateConsultKpi() {
 }
 
 function openConsultModal() {
+  const pc = document.getElementById('photoRoomCnt'); if (pc) pc.textContent = photoRoom.length;
   const now = new Date();
   const pad = n => String(n).padStart(2, '0');
   if (!document.getElementById('cDate').value) {
@@ -1613,6 +1617,65 @@ function openConsultModal() {
   }
   renderConsultList();
   document.getElementById('consultBg').classList.add('open');
+}
+
+
+var PHOTO_ROOM_KEY = 'tonghap_photo_room_v1';
+var photoRoom = [];
+try { photoRoom = JSON.parse(localStorage.getItem(PHOTO_ROOM_KEY) || '[]'); } catch(e) { photoRoom = []; }
+
+function savePhotoRoomStore() {
+  try { localStorage.setItem(PHOTO_ROOM_KEY, JSON.stringify(photoRoom)); }
+  catch(e) { showToast('저장 공간이 부족해요. 오래된 사진을 정리해 주세요.'); }
+  const cnt = document.getElementById('photoRoomCnt');
+  if (cnt) cnt.textContent = photoRoom.length;
+}
+
+function openPhotoRoom() {
+  renderPhotoRoom();
+  document.getElementById('photoRoomBg').classList.add('open');
+}
+
+function closePhotoRoom() {
+  document.getElementById('photoRoomBg').classList.remove('open');
+}
+
+function renderPhotoRoom() {
+  const cnt = document.getElementById('photoRoomCnt');
+  if (cnt) cnt.textContent = photoRoom.length;
+  const g = document.getElementById('photoRoomGrid');
+  if (!g) return;
+  if (!photoRoom.length) {
+    g.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#94A3B8;font-size:13.5px;padding:28px 0">아직 사진 예약방에 올라온 사진이 없어요.<br>위 ➕ 사진 추가 또는 🖼️ 사진 올리기로 넣어 보세요!</div>';
+    return;
+  }
+  g.innerHTML = photoRoom.map(p => `
+    <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;overflow:hidden">
+      <img src="${p.src}" onclick="viewRoomPhoto('${p.id}')" style="width:100%;height:130px;object-fit:cover;display:block;cursor:pointer">
+      <div style="padding:8px">
+        <div style="font-size:12.5px;font-weight:800;color:#0F172A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.label || '사진 예약')}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
+          <span style="font-size:11px;color:#64748B">${esc(p.date || '')}</span>
+          <button type="button" class="btn-sm del" style="padding:3px 7px;font-size:11px" onclick="delRoomPhoto('${p.id}')">삭제</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function viewRoomPhoto(id) {
+  const p = photoRoom.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('photoZoomMeta').textContent = `${p.label || '사진 예약'} · ${p.date || ''}`;
+  document.getElementById('photoZoomImg').src = p.src;
+  document.getElementById('photoZoomBg').classList.add('open');
+}
+
+function delRoomPhoto(id) {
+  if (!confirm('이 사진을 사진 예약방에서 삭제할까요?')) return;
+  photoRoom = photoRoom.filter(x => x.id !== id);
+  savePhotoRoomStore();
+  renderPhotoRoom();
 }
 
 var consultPhotos = [];
@@ -1631,6 +1694,11 @@ function renderConsultPhotoGrid() {
 function handleConsultPhotos(e) {
   const files = Array.from(e.target.files || []);
   e.target.value = '';
+  if (!files.length) return;
+  const dateVal = document.getElementById('cDate')?.value || new Date().toISOString().slice(0, 10);
+  const nameVal = (document.getElementById('cName')?.value || '').trim();
+  const label = nameVal || '사진 예약';
+  let done = 0;
   files.forEach(file => {
     const url = URL.createObjectURL(file);
     const img = new Image();
@@ -1645,10 +1713,21 @@ function handleConsultPhotos(e) {
       cv.width = w; cv.height = h;
       cv.getContext('2d').drawImage(img, 0, 0, w, h);
       URL.revokeObjectURL(url);
-      consultPhotos.push(cv.toDataURL('image/jpeg', 0.78));
-      renderConsultPhotoGrid();
+      photoRoom.unshift({
+        id: 'pr_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
+        date: dateVal,
+        label,
+        src: cv.toDataURL('image/jpeg', 0.78),
+        createdAt: Date.now()
+      });
+      done++;
+      if (done === files.length) {
+        savePhotoRoomStore();
+        openPhotoRoom();
+        showToast('📷 사진 예약방에 저장했어요!');
+      }
     };
-    img.onerror = () => URL.revokeObjectURL(url);
+    img.onerror = () => { URL.revokeObjectURL(url); done++; };
     img.src = url;
   });
 }
@@ -2106,5 +2185,32 @@ render();
 })();
 
 </script>
+
+<!-- Photo Reservation Room Modal -->
+<div class="modal-bg" id="photoRoomBg" onclick="if(event.target===this)closePhotoRoom()">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-hdr">
+      <h2>📷 사진 예약방</h2>
+      <button class="close-x" onclick="closePhotoRoom()">✕</button>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px">
+      <span style="font-size:13px;color:#64748B;font-weight:700">사진을 누르면 크게 볼 수 있어요</span>
+      <button type="button" class="photo-btn" onclick="document.getElementById('cPhotoInput').click()" style="padding:8px 12px;font-size:13px;white-space:nowrap">➕ 사진 추가</button>
+    </div>
+    <div id="photoRoomGrid" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:14px"></div>
+    <button type="button" class="btn-save" style="width:100%;padding:13px;font-size:15px;font-weight:800" onclick="closePhotoRoom()">닫기</button>
+  </div>
+</div>
+
+<!-- Single Photo Zoom Modal -->
+<div class="modal-bg" id="photoZoomBg" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="sheet" style="padding:14px">
+    <div id="photoZoomMeta" style="font-size:13.5px;font-weight:800;color:#0F172A;margin-bottom:10px"></div>
+    <img id="photoZoomImg" src="" style="width:100%;border-radius:12px;border:1px solid #E2E8F0;margin-bottom:12px">
+    <button type="button" class="btn-save" style="width:100%;padding:13px;font-size:15px;font-weight:800" onclick="document.getElementById('photoZoomBg').classList.remove('open')">닫기</button>
+  </div>
+</div>
+
 </body>
 </html>
