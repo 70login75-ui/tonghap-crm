@@ -366,6 +366,20 @@
   .v-k { color: #64748B; font-weight: 600; flex-shrink: 0; }
   .v-v { color: #0F172A; font-weight: 700; text-align: right; word-break: break-all; }
 
+
+  .voice-wave { display:none; align-items:center; gap:8px; background:#EFF6FF; border:1px solid #BFDBFE; border-radius:12px; padding:9px 12px; margin-bottom:8px; }
+  .voice-wave.show { display:flex; }
+  .wave-bars { display:flex; align-items:center; gap:3px; height:22px; }
+  .wave-bars span { width:3.5px; height:6px; border-radius:3px; background:#2563EB; animation:vwave 0.7s ease-in-out infinite; }
+  .wave-bars span:nth-child(2){ animation-delay:.1s }
+  .wave-bars span:nth-child(3){ animation-delay:.2s }
+  .wave-bars span:nth-child(4){ animation-delay:.3s }
+  .wave-bars span:nth-child(5){ animation-delay:.15s }
+  .wave-bars span:nth-child(6){ animation-delay:.25s }
+  .wave-bars span:nth-child(7){ animation-delay:.05s }
+  .wave-bars span:nth-child(8){ animation-delay:.35s }
+  .voice-wave.speaking .wave-bars span { background:#DC2626; animation-duration:0.35s; }
+  @keyframes vwave { 0%,100%{ height:5px; } 50%{ height:20px; } }
 </style>
 </head>
 <body>
@@ -617,6 +631,10 @@
       </div>
       <input type="file" id="ocrCamInput" accept="image/*" capture="environment" style="display:none" onchange="runConsultOcr(event)">
       <input type="file" id="ocrInput" accept="image/*" style="display:none" onchange="runConsultOcr(event)">
+            <div id="voiceWave" class="voice-wave">
+        <div class="wave-bars"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+        <span id="voiceLiveTxt" style="font-size:13px;font-weight:700;color:#1E40AF;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">듣고 있어요... 말씀해 주세요</span>
+      </div>
       <div id="ocrStatus" style="display:none;font-size:12.5px;color:#2563EB;font-weight:700;margin-bottom:6px"></div>
       <textarea id="cMemo" rows="4" placeholder="상담 예약 내용을 직접 입력하거나, 음성 입력 / 사진→텍스트 버튼을 눌러 채우세요."></textarea>
     </div>
@@ -1625,10 +1643,20 @@ function renderConsultList() {
   }).join('');
 }
 
+function setVoiceWaveUI(active, speaking, liveTxt) {
+  const w = document.getElementById('voiceWave');
+  const l = document.getElementById('voiceLiveTxt');
+  if (!w) return;
+  w.classList.toggle('show', !!active);
+  w.classList.toggle('speaking', !!speaking);
+  if (l && liveTxt) l.textContent = liveTxt;
+}
+
 function stopVoiceConsult() {
   const btn = document.getElementById('voiceBtn');
   window._recogActive = false;
   if (btn) btn.textContent = '🎤 음성 입력';
+  setVoiceWaveUI(false, false);
   if (window._recog) {
     const r = window._recog;
     try { r.stop(); } catch {}
@@ -1650,22 +1678,33 @@ function startVoiceConsult() {
   }
   const recog = new SR();
   recog.lang = 'ko-KR';
-  recog.interimResults = false;
+  recog.interimResults = true;
   recog.continuous = false;
   window._recog = recog;
   window._recogActive = true;
   btn.textContent = '🔴 중지';
+  setVoiceWaveUI(true, false, '듣고 있어요... 말씀해 주세요');
+  recog.onspeechstart = () => setVoiceWaveUI(true, true, '목소리 감지됨...');
+  recog.onspeechend = () => setVoiceWaveUI(true, false, '정리 중...');
   recog.onresult = (e) => {
-    const txt = Array.from(e.results).map(r => r[0].transcript).join(' ').trim();
-    if (txt) {
+    let finalTxt = '', interimTxt = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const t = e.results[i][0].transcript;
+      if (e.results[i].isFinal) finalTxt += t + ' ';
+      else interimTxt += t;
+    }
+    if (interimTxt) setVoiceWaveUI(true, true, interimTxt.trim());
+    finalTxt = finalTxt.trim();
+    if (finalTxt) {
       const box = document.getElementById('cMemo');
-      box.value = box.value ? (box.value + '\n' + txt) : txt;
+      box.value = box.value ? (box.value + '\n' + finalTxt) : finalTxt;
       toast('음성이 텍스트로 입력되었습니다.');
     }
   };
   recog.onerror = (ev) => {
     window._recogActive = false;
     if (btn) btn.textContent = '🎤 음성 입력';
+    setVoiceWaveUI(false, false);
     if (ev && ev.error !== 'aborted') {
       toast('음성 인식에 실패했습니다. 마이크 권한을 확인해 주세요.');
     }
@@ -1673,6 +1712,7 @@ function startVoiceConsult() {
   recog.onend = () => {
     window._recogActive = false;
     if (btn) btn.textContent = '🎤 음성 입력';
+    setVoiceWaveUI(false, false);
   };
   try {
     recog.start();
