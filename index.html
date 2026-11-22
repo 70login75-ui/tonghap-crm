@@ -1699,10 +1699,12 @@ function stopVoiceConsult() {
 function launchVoiceSession() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   const btn = document.getElementById('voiceBtn');
+  const box = document.getElementById('cMemo');
+  const baseMemo = (box ? box.value : '').trim();
   const recog = new SR();
   recog.lang = 'ko-KR';
   recog.interimResults = true;
-  recog.continuous = true;
+  recog.continuous = false;
   window._recog = recog;
   recog.onspeechstart = () => {
     if (window._recogActive) setVoiceWaveUI(true, true, '목소리 감지됨...');
@@ -1711,17 +1713,18 @@ function launchVoiceSession() {
     if (window._recogActive) setVoiceWaveUI(true, false, '계속 듣고 있어요... (끝내려면 🔴 중지)');
   };
   recog.onresult = (e) => {
-    let finalTxt = '', interimTxt = '';
-    for (let i = e.resultIndex; i < e.results.length; i++) {
-      const t = e.results[i][0].transcript;
-      if (e.results[i].isFinal) finalTxt += t + ' ';
-      else interimTxt += t;
+    let finals = [], interims = [];
+    for (let i = 0; i < e.results.length; i++) {
+      const t = (e.results[i][0].transcript || '').trim();
+      if (!t) continue;
+      if (e.results[i].isFinal) finals.push(t);
+      else interims.push(t);
     }
-    if (interimTxt && window._recogActive) setVoiceWaveUI(true, true, interimTxt.trim());
-    finalTxt = finalTxt.trim();
-    if (finalTxt) {
-      const box = document.getElementById('cMemo');
-      box.value = box.value ? (box.value + ' ' + finalTxt) : finalTxt;
+    const interimTxt = interims.join(' ').trim();
+    if (interimTxt && window._recogActive) setVoiceWaveUI(true, true, interimTxt);
+    const sessionTxt = finals.join(' ').trim();
+    if (sessionTxt && box) {
+      box.value = baseMemo ? (baseMemo + '\n' + sessionTxt) : sessionTxt;
     }
   };
   recog.onerror = (ev) => {
@@ -1788,7 +1791,7 @@ function shrinkImageForOcr(file) {
     const img = new Image();
     img.onload = () => {
       try {
-        const maxSide = 1600;
+        const maxSide = 1200;
         let w = img.naturalWidth || img.width;
         let h = img.naturalHeight || img.height;
         if (w > maxSide || h > maxSide) {
@@ -1801,15 +1804,6 @@ function shrinkImageForOcr(file) {
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, w, h);
         ctx.drawImage(img, 0, 0, w, h);
-        const im = ctx.getImageData(0, 0, w, h);
-        const d = im.data;
-        for (let i = 0; i < d.length; i += 4) {
-          let g = 0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2];
-          g = (g - 128) * 1.35 + 128;
-          g = g < 0 ? 0 : (g > 255 ? 255 : g);
-          d[i] = d[i+1] = d[i+2] = g;
-        }
-        ctx.putImageData(im, 0, 0);
         URL.revokeObjectURL(url);
         cv.toBlob(b => b ? resolve(b) : reject(new Error('이미지 변환 실패')), 'image/jpeg', 0.9);
       } catch (e) {
