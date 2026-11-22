@@ -70,6 +70,7 @@
     display: flex; flex-direction: column; justify-content: space-between; align-items: center;
   }
   .kpi:active { transform: scale(0.97); }
+  .kpi.active { background: rgba(59,130,246,0.32); border-color: #60A5FA; box-shadow: 0 0 0 2px rgba(96,165,250,0.45); }
   .kpi .v { font-size: 18px; line-height: 24px; min-height: 24px; font-weight: 800; letter-spacing: -0.5px; display: flex; align-items: center; justify-content: center; white-space: nowrap; }
   .kpi.warn .v { color: #FACC15; }
   .kpi.money .v { color: #34D399; font-size: 13px; line-height: 24px; }
@@ -396,10 +397,10 @@
     </div>
   </div>
   <div class="kpi-grid">
-    <div class="kpi" onclick="quickFilter('전체')"><div class="v" id="stTotal">0</div><div class="k">전체 고객</div></div>
-    <div class="kpi" onclick="quickFilter('상담·접수')"><div class="v" id="stActive">0</div><div class="k">상담·접수</div></div>
-    <div class="kpi warn" onclick="quickFilter('만료임박')"><div class="v" id="stExpiring">0</div><div class="k">약정임박</div></div>
-    <div class="kpi money" onclick="quickFilter('미정산')"><div class="v" id="stFee">0원</div><div class="k">미정산</div></div>
+    <div class="kpi active" data-kf="전체" onclick="quickFilter('전체')"><div class="v" id="stTotal">0</div><div class="k">전체 고객</div></div>
+    <div class="kpi" data-kf="상담·접수" onclick="quickFilter('상담·접수')"><div class="v" id="stActive">0</div><div class="k">상담·접수</div></div>
+    <div class="kpi warn" data-kf="만료임박" onclick="quickFilter('만료임박')"><div class="v" id="stExpiring">0</div><div class="k">약정임박</div></div>
+    <div class="kpi money" data-kf="미정산" onclick="quickFilter('미정산')"><div class="v" id="stFee">0원</div><div class="k">미정산</div></div>
   </div>
 </div>
 
@@ -737,13 +738,19 @@ function showToast(msg) {
 
 function quickFilter(f) {
   const btn = document.querySelector(`.chip[data-f="${f}"]`);
-  if (btn) setFilter(f, btn);
+  if (btn) {
+    setFilter(f, btn);
+    toast(f === '전체' ? '전체 고객 보기' : `${f} 고객만 보기`);
+  }
 }
 
 function setFilter(f, btn) {
   filter = f;
   document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-  btn.classList.add('active');
+  if (btn) btn.classList.add('active');
+  document.querySelectorAll('.kpi').forEach(k => {
+    k.classList.toggle('active', k.getAttribute('data-kf') === f);
+  });
   render();
 }
 
