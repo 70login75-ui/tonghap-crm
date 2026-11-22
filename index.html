@@ -1625,6 +1625,17 @@ function renderConsultList() {
   }).join('');
 }
 
+function stopVoiceConsult() {
+  const btn = document.getElementById('voiceBtn');
+  window._recogActive = false;
+  if (btn) btn.textContent = '🎤 음성 입력';
+  if (window._recog) {
+    const r = window._recog;
+    try { r.stop(); } catch {}
+    setTimeout(() => { try { r.abort(); } catch {} }, 250);
+  }
+}
+
 function startVoiceConsult() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   const btn = document.getElementById('voiceBtn');
@@ -1632,8 +1643,9 @@ function startVoiceConsult() {
     toast('이 브라우저에서는 음성인식이 지원되지 않아요. 크롬을 이용해 보세요.');
     return;
   }
-  if (window._recogActive && window._recog) {
-    window._recog.stop();
+  if (window._recogActive) {
+    stopVoiceConsult();
+    toast('음성 입력을 중지했습니다.');
     return;
   }
   const recog = new SR();
@@ -1642,7 +1654,7 @@ function startVoiceConsult() {
   recog.continuous = false;
   window._recog = recog;
   window._recogActive = true;
-  btn.textContent = '🔴 듣는 중... (누르면 중지)';
+  btn.textContent = '🔴 중지';
   recog.onresult = (e) => {
     const txt = Array.from(e.results).map(r => r[0].transcript).join(' ').trim();
     if (txt) {
@@ -1651,14 +1663,23 @@ function startVoiceConsult() {
       toast('음성이 텍스트로 입력되었습니다.');
     }
   };
-  recog.onerror = () => {
-    toast('음성 인식에 실패했습니다. 마이크 권한을 확인해 주세요.');
+  recog.onerror = (ev) => {
+    window._recogActive = false;
+    if (btn) btn.textContent = '🎤 음성 입력';
+    if (ev && ev.error !== 'aborted') {
+      toast('음성 인식에 실패했습니다. 마이크 권한을 확인해 주세요.');
+    }
   };
   recog.onend = () => {
     window._recogActive = false;
-    btn.textContent = '🎤 음성 입력';
+    if (btn) btn.textContent = '🎤 음성 입력';
   };
-  recog.start();
+  try {
+    recog.start();
+  } catch {
+    stopVoiceConsult();
+    toast('음성 인식을 시작하지 못했습니다.');
+  }
 }
 
 function loadTesseract() {
@@ -1672,16 +1693,51 @@ function loadTesseract() {
   });
 }
 
+function shrinkImageForOcr(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const maxSide = 1600;
+        let w = img.naturalWidth || img.width;
+        let h = img.naturalHeight || img.height;
+        if (w > maxSide || h > maxSide) {
+          if (w >= h) { h = Math.round(h * maxSide / w); w = maxSide; }
+          else { w = Math.round(w * maxSide / h); h = maxSide; }
+        }
+        const cv = document.createElement('canvas');
+        cv.width = w; cv.height = h;
+        const ctx = cv.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(url);
+        cv.toBlob(b => b ? resolve(b) : reject(new Error('이미지 변환 실패')), 'image/jpeg', 0.9);
+      } catch (e) {
+        URL.revokeObjectURL(url);
+        reject(e);
+      }
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('사진 불러오기 실패'));
+    };
+    img.src = url;
+  });
+}
+
 async function runConsultOcr(e) {
   const file = e.target.files && e.target.files[0];
   e.target.value = '';
   if (!file) return;
   const st = document.getElementById('ocrStatus');
   st.style.display = 'block';
-  st.textContent = '📷 사진에서 글자를 읽고 있습니다... (첫 실행은 5~10초 걸릴 수 있어요)';
+  st.textContent = '📷 사진 크기 최적화 및 글자 읽는 중... (첫 실행은 5~10초 걸려요)';
   try {
+    const smallBlob = await shrinkImageForOcr(file);
     const T = await loadTesseract();
-    const res = await T.recognize(file, 'kor+eng', {
+    const res = await T.recognize(smallBlob, 'kor+eng', {
       logger: m => {
         if (m.status === 'recognizing text' && typeof m.progress === 'number') {
           st.textContent = `📷 글자 변환 중... ${Math.round(m.progress * 100)}%`;
@@ -1695,10 +1751,10 @@ async function runConsultOcr(e) {
       st.textContent = '✅ 사진 글자를 입력 칸에 넣었습니다. 오타만 살짝 확인해 주세요!';
       toast('사진 텍스트 변환 완료!');
     } else {
-      st.textContent = '⚠️ 사진에서 글자를 찾지 못했습니다. 더 선명하게 찍어 보세요.';
+      st.textContent = '⚠️ 사진에서 글자를 찾지 못했습니다. 글자가 선명하게 나오도록 다시 찍어 보세요.';
     }
   } catch (err) {
-    st.textContent = '⚠️ 사진 변환 중 오류가 났습니다. 인터넷 연결을 확인해 주세요.';
+    st.textContent = '⚠️ 사진 변환 오류: ' + (err && err.message ? err.message : '다시 시도해 주세요.');
   }
 }
 
