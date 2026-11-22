@@ -452,6 +452,7 @@
 
   <div class="chips" id="chips">
     <button class="chip" data-f="개통완료" onclick="setFilter(filter==='개통완료'?'전체':'개통완료',this)">개통완료</button>
+    <button class="chip" data-f="미개통" onclick="setFilter(filter==='미개통'?'전체':'미개통',this)">미개통</button>
   </div>
 
   <div class="bar-meta">
@@ -970,6 +971,7 @@ function render() {
     if (filter === '상담·접수' && !(x.status === '상담중' || x.status === '접수완료')) return false;
     if (filter === '만료임박' && !(d !== null && d <= 90 && x.status !== '보류취소')) return false;
     if (filter === '개통완료' && x.status !== '개통완료') return false;
+    if (filter === '미개통' && x.status === '개통완료') return false;
     if (filter === '미정산' && (x.settled || x.status === '보류취소')) return false;
     if (q) {
       const hay = `${x.name} ${x.phone} ${x.carrier} ${x.product} ${x.planName||''} ${x.address||''} ${x.memo}`.toLowerCase();
