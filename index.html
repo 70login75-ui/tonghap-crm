@@ -414,7 +414,7 @@
 
   <div class="chips" id="chips">
     <button class="chip active" data-f="전체" onclick="setFilter('전체',this)">전체</button>
-    <button class="chip" data-f="상담·접수" onclick="setFilter('상담·접수',this)">상담·접수</button>
+    <button class="chip" data-f="상담예약" onclick="openConsultModal()">상담 예약</button>
     <button class="chip" data-f="만료임박" onclick="setFilter('만료임박',this)">약정임박(D-90)</button>
     <button class="chip" data-f="개통완료" onclick="setFilter('개통완료',this)">개통완료</button>
     <button class="chip" data-f="미정산" onclick="setFilter('미정산',this)">미정산</button>
@@ -610,10 +610,12 @@
     </div>
     <div class="field">
       <label>상담 내용 (텍스트 · 음성 · 사진 변환)</label>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-        <button type="button" id="voiceBtn" class="photo-btn" onclick="startVoiceConsult()" style="padding:11px;font-size:13.5px">🎤 음성 입력</button>
-        <button type="button" class="photo-btn" onclick="document.getElementById('ocrInput').click()" style="padding:11px;font-size:13.5px">📷 사진→텍스트</button>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px">
+        <button type="button" id="voiceBtn" class="photo-btn" onclick="startVoiceConsult()" style="padding:10px 4px;font-size:13px">🎤 음성 입력</button>
+        <button type="button" class="photo-btn" onclick="document.getElementById('ocrCamInput').click()" style="padding:10px 4px;font-size:13px">📷 사진 찍기</button>
+        <button type="button" class="photo-btn" onclick="document.getElementById('ocrInput').click()" style="padding:10px 4px;font-size:13px">🖼️ 사진 선택</button>
       </div>
+      <input type="file" id="ocrCamInput" accept="image/*" capture="environment" style="display:none" onchange="runConsultOcr(event)">
       <input type="file" id="ocrInput" accept="image/*" style="display:none" onchange="runConsultOcr(event)">
       <div id="ocrStatus" style="display:none;font-size:12.5px;color:#2563EB;font-weight:700;margin-bottom:6px"></div>
       <textarea id="cMemo" rows="4" placeholder="상담 예약 내용을 직접 입력하거나, 음성 입력 / 사진→텍스트 버튼을 눌러 채우세요."></textarea>
@@ -1702,6 +1704,6 @@ if (localStorage.getItem(PASS_KEY)) {
 }
 render();
 </script>
-<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("./sw.js").catch(()=>{});}</script>
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("./sw.js").then(r=>r.update()).catch(()=>{});}</script>
 </body>
 </html>
