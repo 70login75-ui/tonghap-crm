@@ -578,7 +578,7 @@
       <button type="button" class="photo-btn" onclick="document.getElementById('galInput').click()">🖼️ 갤러리 업로드</button>
     </div>
     <input type="file" id="camInput" accept="image/*" capture="environment" style="display:none" onchange="handlePhotos(event)">
-    <input type="file" id="galInput" accept="image/*" multiple style="display:none" onchange="handlePhotos(event)">
+    <input type="file" id="galInput" accept="image/png,image/jpeg,image/jpg,image/webp,image/heic,image/gif" multiple style="display:none" onchange="handlePhotos(event)">
     <div class="preview-grid" id="pvGrid"></div>
 
     <div class="sec-lbl">6. 메모</div>
