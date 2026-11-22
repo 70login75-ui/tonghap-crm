@@ -594,9 +594,21 @@
         <div class="field"><label>설치비·기사출동비 (원)</label><input id="fInstallFee" type="text" inputmode="numeric" placeholder="예: 36,300" oninput="fmtMoneyInput(this)"></div>
       </div>
       <div class="field"><label style="color:#2563EB;font-size:17px;font-weight:900;letter-spacing:-0.2px">현금지급처</label>
-        <div class="seg-chips" id="cashPayerChips">
-          <button type="button" class="seg-btn on" onclick="pickChip('fCashPayer','cashPayerChips',this)">유치자 직접지급</button>
-          <button type="button" class="seg-btn" onclick="pickChip('fCashPayer','cashPayerChips',this)">웨이브넷 지급</button>
+        <div id="cashPayerChips" style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:grid;grid-template-columns:138px minmax(0,1fr);gap:8px;align-items:center">
+            <button type="button" class="seg-btn on" onclick="pickChip('fCashPayer','cashPayerChips',this)" style="width:100%;padding:11px 6px;font-size:13.5px">유치자 직접지급</button>
+            <div style="display:flex;align-items:center;gap:4px">
+              <input id="fCashDirectAmt" type="text" inputmode="numeric" placeholder="0" oninput="fmtMoneyInput(this)">
+              <span style="font-size:14.5px;font-weight:800;color:#475569;flex-shrink:0">원</span>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:138px minmax(0,1fr);gap:8px;align-items:center">
+            <button type="button" class="seg-btn" onclick="pickChip('fCashPayer','cashPayerChips',this)" style="width:100%;padding:11px 6px;font-size:13.5px">웨이브넷 지급</button>
+            <div style="display:flex;align-items:center;gap:4px">
+              <input id="fCashWaveAmt" type="text" inputmode="numeric" placeholder="0" oninput="fmtMoneyInput(this)">
+              <span style="font-size:14.5px;font-weight:800;color:#475569;flex-shrink:0">원</span>
+            </div>
+          </div>
         </div>
         <input type="hidden" id="fCashPayer" value="유치자 직접지급">
       </div>
@@ -1402,6 +1414,8 @@ function openViewModal(id) {
     row('설치희망일', x.installWish),
     x.installFee ? row('설치비(기사출동비)', fmtMoney(x.installFee)) : '',
     row('현금지급처', x.cashPayer),
+    x.cashDirectAmt ? row('유치자 직접지급 금액', Number(x.cashDirectAmt).toLocaleString('ko-KR') + '원') : '',
+    x.cashWaveAmt ? row('웨이브넷 지급 금액', Number(x.cashWaveAmt).toLocaleString('ko-KR') + '원') : '',
     row('기타 ①', x.etc),
     row('기타 ②', x.etc2)
   ].filter(Boolean).join('');
@@ -1475,6 +1489,8 @@ function openModal(id) {
     document.getElementById('fVoucher').value = item.voucher || '';
     document.getElementById('fGift').value = item.gift ? Number(item.gift).toLocaleString('ko-KR') : '';
     syncChips('fCashPayer', 'cashPayerChips', item.cashPayer || '유치자 직접지급');
+    document.getElementById('fCashDirectAmt').value = fmtMoneyVal(item.cashDirectAmt || '');
+    document.getElementById('fCashWaveAmt').value = fmtMoneyVal(item.cashWaveAmt || '');
     document.getElementById('fEtc').value = item.etc || '';
     document.getElementById('fEtc2').value = item.etc2 || '';
     document.getElementById('fMemo').value = item.memo || '';
@@ -1495,6 +1511,8 @@ function openModal(id) {
     syncChips('fProduct', 'productChips', '인터넷+TV');
     syncChips('fAp', 'apChips', '신청');
     syncChips('fCashPayer', 'cashPayerChips', '유치자 직접지급');
+    document.getElementById('fCashDirectAmt').value = '';
+    document.getElementById('fCashWaveAmt').value = '';
     tempSims = [];
     tempPhotos = [];
     delBtn.style.display = 'none';
@@ -1536,6 +1554,8 @@ function saveCustomer() {
     voucher: document.getElementById('fVoucher').value.trim(),
     gift: numVal('fGift'),
     cashPayer: document.getElementById('fCashPayer').value,
+    cashDirectAmt: unfmtMoney(document.getElementById('fCashDirectAmt').value),
+    cashWaveAmt: unfmtMoney(document.getElementById('fCashWaveAmt').value),
     etc: document.getElementById('fEtc').value.trim(),
     etc2: document.getElementById('fEtc2').value.trim(),
     sims: tempSims.filter(s => s.name || s.phone || s.carrier || s.plan),
