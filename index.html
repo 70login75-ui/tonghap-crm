@@ -385,6 +385,23 @@
   .sheet { max-width: 100%; overflow-x: hidden; }
   .grid2 > * { min-width: 0; }
   .sheet input, .sheet select, .sheet textarea { max-width: 100%; min-width: 0; }
+
+  .cal-wrap { background:#F8FAFC; border:1px solid #E2E8F0; border-radius:14px; padding:12px; margin-top:4px; }
+  .cal-hdr { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .cal-hdr b { font-size:15px; font-weight:800; color:#0F172A; }
+  .cal-nav { border:1px solid #CBD5E1; background:#fff; border-radius:8px; padding:5px 10px; font-size:13px; font-weight:800; cursor:pointer; }
+  .cal-grid { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:4px; text-align:center; }
+  .cal-dow { font-size:11.5px; font-weight:800; color:#64748B; padding-bottom:4px; }
+  .cal-cell {
+    min-height:42px; border-radius:10px; border:1px solid transparent; background:#fff;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:3px 2px; cursor:pointer; font-size:13px; font-weight:700; color:#0F172A;
+  }
+  .cal-cell.empty { background:transparent; cursor:default; }
+  .cal-cell.today { border-color:#93C5FD; background:#EFF6FF; }
+  .cal-cell.sel { border-color:#2563EB; background:#2563EB; color:#fff; }
+  .cal-badge { font-size:10px; font-weight:800; color:#DC2626; margin-top:1px; line-height:1; white-space:nowrap; overflow:hidden; max-width:100%; }
+  .cal-cell.sel .cal-badge { color:#FEF08A; }
 </style>
 </head>
 <body>
@@ -637,15 +654,24 @@
     </div>
     <div id="cPhotoGrid" class="preview-grid" style="margin-bottom:8px"></div>
     <input type="file" id="cPhotoInput" accept="image/*" multiple style="display:none" onchange="handleConsultPhotos(event)">
-    <div style="display:flex;justify-content:flex-end;align-items:center;gap:6px;margin-top:6px;margin-bottom:14px;flex-wrap:wrap">
-      <button type="button" class="photo-btn" onclick="document.getElementById('cPhotoInput').click()" style="padding:11px 12px;font-size:13.5px;white-space:nowrap">🖼️ 사진 올리기</button>
-      <button type="button" id="voiceBtn" class="photo-btn" onclick="startVoiceConsult()" style="padding:11px 12px;font-size:13.5px;white-space:nowrap">🎤 음성 입력</button>
-      <button type="button" id="consultCancelBtn" class="btn-sm" style="display:none;padding:10px 12px;font-size:13.5px" onclick="cancelEditConsult()">수정 취소</button>
-      <button type="button" id="consultSaveBtn" class="btn-save" style="width:auto;padding:12px 16px;font-size:14.5px;font-weight:800;border-radius:12px;white-space:nowrap" onclick="saveConsult()">상담 예약 저장</button>
+    <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:6px;margin-bottom:14px">
+      <button type="button" class="photo-btn" onclick="document.getElementById('cPhotoInput').click()" style="padding:11px 2px;font-size:12.5px;white-space:nowrap">🖼️ 사진 올리기</button>
+      <button type="button" id="voiceBtn" class="photo-btn" onclick="startVoiceConsult()" style="padding:11px 2px;font-size:12.5px;white-space:nowrap">🎤 음성 입력</button>
+      <button type="button" id="consultSaveBtn" class="btn-save" style="width:100%;padding:11px 2px;font-size:12.5px;font-weight:800;border-radius:12px;white-space:nowrap" onclick="saveConsult()">상담 예약 저장</button>
     </div>
+    <button type="button" id="consultCancelBtn" class="btn-sm" style="display:none;margin-bottom:10px" onclick="cancelEditConsult()">수정 취소</button>
 
-    <div class="sec-lbl" style="margin-top:18px">예약 목록 (<span id="consultCountTxt">0</span>건)</div>
-    <div id="consultList" style="display:flex;flex-direction:column;gap:8px;margin-top:8px"></div>
+    <div class="sec-lbl" style="margin-top:6px">📅 예약 캘린더 (<span id="consultCountTxt">0</span>건)</div>
+    <div class="cal-wrap">
+      <div class="cal-hdr">
+        <button type="button" class="cal-nav" onclick="moveCalMonth(-1)">◀</button>
+        <b id="calTitle">2026년 11월</b>
+        <button type="button" class="cal-nav" onclick="moveCalMonth(1)">▶</button>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+    <div id="consultDayHeader" style="font-size:13.5px;font-weight:800;color:#0F172A;margin:12px 0 6px"></div>
+    <div id="consultList" style="display:flex;flex-direction:column;gap:8px"></div>
   </div>
 </div>
 
@@ -1760,6 +1786,7 @@ function saveConsult() {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
     date, time, name: name || '미상 고객', phone, memo, photos: [...consultPhotos], createdAt: Date.now()
   });
+  if (date) { const p = date.split('-'); if (p.length===3) { calYear=+p[0]; calMonth=+p[1]-1; selCalDate=date; } }
   saveConsultStore();
   updateConsultKpi();
   cancelEditConsult();
@@ -1789,26 +1816,77 @@ function moveConsultToCustomer(id) {
   showToast('새 고객 등록 창으로 옮겼습니다.');
 }
 
+
+var calYear = new Date().getFullYear();
+var calMonth = new Date().getMonth();
+var selCalDate = '';
+
+function moveCalMonth(delta) {
+  calMonth += delta;
+  if (calMonth < 0) { calMonth = 11; calYear--; }
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  renderConsultList();
+}
+
+function selectCalDate(ds) {
+  selCalDate = ds;
+  const cd = document.getElementById('cDate');
+  if (cd) cd.value = ds;
+  renderConsultList();
+}
+
 function renderConsultList() {
-  const box = document.getElementById('consultList');
   const cnt = document.getElementById('consultCountTxt');
   if (cnt) cnt.textContent = consults.length;
-  if (!consults.length) {
-    box.innerHTML = '<div style="text-align:center;color:#94A3B8;font-size:13px;padding:18px 0">등록된 상담 예약이 없습니다.</div>';
+
+  const now = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  const todayStr = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+  if (!selCalDate) selCalDate = document.getElementById('cDate')?.value || todayStr;
+
+  const titleEl = document.getElementById('calTitle');
+  if (titleEl) titleEl.textContent = `${calYear}년 ${calMonth + 1}월`;
+
+  const grid = document.getElementById('calGrid');
+  if (grid) {
+    const dows = ['일','월','화','수','목','금','토'].map(d => `<div class="cal-dow">${d}</div>`).join('');
+    const firstDay = new Date(calYear, calMonth, 1).getDay();
+    const lastDate = new Date(calYear, calMonth + 1, 0).getDate();
+    let cells = dows;
+    for (let i = 0; i < firstDay; i++) cells += '<div class="cal-cell empty"></div>';
+    for (let d = 1; d <= lastDate; d++) {
+      const ds = `${calYear}-${pad(calMonth+1)}-${pad(d)}`;
+      const dayItems = consults.filter(c => c.date === ds);
+      const cls = ['cal-cell'];
+      if (ds === todayStr) cls.push('today');
+      if (ds === selCalDate) cls.push('sel');
+      const badge = dayItems.length ? `<span class="cal-badge">${dayItems.length}건</span>` : '';
+      cells += `<div class="${cls.join(' ')}" onclick="selectCalDate('${ds}')"><span>${d}</span>${badge}</div>`;
+    }
+    grid.innerHTML = cells;
+  }
+
+  const hdr = document.getElementById('consultDayHeader');
+  const dayRows = consults.filter(c => c.date === selCalDate);
+  if (hdr) hdr.textContent = `📌 ${selCalDate} 예약 (${dayRows.length}건)`;
+
+  const box = document.getElementById('consultList');
+  if (!box) return;
+  if (!dayRows.length) {
+    box.innerHTML = '<div style="text-align:center;color:#94A3B8;font-size:13px;padding:12px 0">이 날짜에 등록된 상담 예약이 없습니다. 위에서 바로 입력해 보세요!</div>';
     return;
   }
-  box.innerHTML = consults.map(c => {
-    const dt = [c.date, c.time].filter(Boolean).join(' ');
+  box.innerHTML = dayRows.map(c => {
     const tel = (c.phone || '').replace(/\D/g, '');
     return `<div onclick="openConsultView('${c.id}')" style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:11px 12px;cursor:pointer">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
         <div style="font-size:14.5px;font-weight:800;color:#0F172A">${esc(c.name)} ${c.phone ? `<span style="font-size:12.5px;color:#475569;font-weight:600">(${esc(c.phone)})</span>` : ''}</div>
-        <span style="font-size:12px;font-weight:700;color:#2563EB">${esc(dt || '날짜 미정')}</span>
+        <span style="font-size:12px;font-weight:700;color:#2563EB">${esc(c.time || '시간 미정')}</span>
       </div>
-      ${c.memo ? `<div style="font-size:13.5px;color:#334155;margin-top:6px;white-space:pre-wrap;line-height:1.45">${esc(c.memo)}</div>` : ''}${(c.photos&&c.photos.length)?`<div style="font-size:12.5px;font-weight:700;color:#2563EB;margin-top:5px">📷 첨부 사진 ${c.photos.length}장 (눌러서 보기)</div>`:''}
+      ${c.memo ? `<div style="font-size:13.5px;color:#334155;margin-top:6px;white-space:pre-wrap;line-height:1.45">${esc(c.memo)}</div>` : ''}
+      ${(c.photos&&c.photos.length)?`<div style="font-size:12.5px;font-weight:700;color:#2563EB;margin-top:5px">📷 첨부 사진 ${c.photos.length}장 (눌러서 보기)</div>`:''}
       <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap" onclick="event.stopPropagation()">
         ${tel ? `<a class="btn-sm" href="tel:${tel}" style="text-decoration:none;background:#ECFDF5;color:#047857;border-color:#A7F3D0">📞 전화</a>` : ''}
-        <button type="button" class="btn-sm" onclick="editConsult('${c.id}')">✏️ 확인·수정</button>
         <button type="button" class="btn-sm" onclick="moveConsultToCustomer('${c.id}')">➕ 고객등록</button>
         <button type="button" class="btn-sm del" onclick="delConsult('${c.id}')">삭제</button>
       </div>
