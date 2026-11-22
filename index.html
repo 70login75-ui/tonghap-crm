@@ -452,8 +452,8 @@
   </div>
 
   <div class="chips" id="chips">
-    <button class="chip" data-f="개통완료" onclick="setFilter(filter==='개통완료'?'전체':'개통완료',this)">개통완료</button>
     <button class="chip" data-f="미개통" onclick="setFilter(filter==='미개통'?'전체':'미개통',this)">미개통</button>
+    <button class="chip" data-f="개통완료" onclick="setFilter(filter==='개통완료'?'전체':'개통완료',this)">개통완료</button>
   </div>
 
   <div class="bar-meta">
@@ -907,7 +907,7 @@ function setTodayOpen() {
 }
 
 function cycleStatus(id) {
-  const order = ['개통완료', '미개통', '보류취소'];
+  const order = ['미개통', '개통완료', '보류취소'];
   const data = loadData();
   const idx = data.findIndex(x => x.id === id);
   if (idx < 0) return;
