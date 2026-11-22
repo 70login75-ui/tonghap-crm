@@ -150,6 +150,7 @@
   .st-상담중 { background: var(--amber-soft); color: #B45309; }
   .st-접수완료 { background: var(--blue-soft); color: var(--blue); }
   .st-개통완료 { background: var(--green-soft); color: #047857; }
+  .st-미개통 { background: var(--amber-soft); color: #B45309; }
   .st-보류취소 { background: #F1F5F9; color: #64748B; }
 
   .dday-chip { font-size: 11.5px; font-weight: 800; padding: 4px 9px; border-radius: 999px; white-space: nowrap; }
@@ -503,9 +504,8 @@
       <div class="field">
         <label>진행 상태</label>
         <select id="fStatus">
-          <option value="상담중">상담중</option>
-          <option value="접수완료">접수완료</option>
           <option value="개통완료">개통완료</option>
+          <option value="미개통">미개통</option>
           <option value="보류취소">보류/취소</option>
         </select>
       </div>
@@ -785,7 +785,7 @@ function loadData() {
     {
       id: 'sample_2', name: '이영희 (샘플)', phone: '010-9876-5432',
       carrier: 'SK브로드밴드', product: '인터넷+TV+휴대폰결합', openDate: '',
-      expDate: plusDays(120), status: '상담중', gift: 60, fee: 300000,
+      expDate: plusDays(120), status: '미개통', gift: 60, fee: 300000,
       settled: false, photos: [],
       memo: '휴대폰 2회선 결합 희망 · 내일 오후 재연락 예정',
       createdAt: Date.now()
@@ -907,7 +907,7 @@ function setTodayOpen() {
 }
 
 function cycleStatus(id) {
-  const order = ['상담중', '접수완료', '개통완료', '보류취소'];
+  const order = ['개통완료', '미개통', '보류취소'];
   const data = loadData();
   const idx = data.findIndex(x => x.id === id);
   if (idx < 0) return;
@@ -1415,7 +1415,7 @@ function openModal(id) {
     document.getElementById('editId').value = item.id;
     document.getElementById('fName').value = item.name || '';
     document.getElementById('fPhone').value = item.phone || '';
-    document.getElementById('fStatus').value = item.status || '상담중';
+    document.getElementById('fStatus').value = item.status || '미개통';
     document.getElementById('fFee').value = item.fee ? Number(item.fee).toLocaleString('ko-KR') : '';
     document.getElementById('fOpenDate').value = item.openDate || '';
     document.getElementById('fExpDate').value = item.expDate || '';
@@ -1451,7 +1451,7 @@ function openModal(id) {
     document.getElementById('editId').value = '';
     ['fName','fPhone','fFee','fOpenDate','fExpDate','fRrn','fAddress','fPayDetail','fGiftAccount','fPlanName','fMonthlyFee','fInstallWish','fInstallFee','fVoucher','fGift','fEtc','fEtc2','fMemo'].forEach(k => document.getElementById(k).value = '');
     document.getElementById('fTermMonths').value = '36';
-    document.getElementById('fStatus').value = '상담중';
+    document.getElementById('fStatus').value = '미개통';
     document.getElementById('fSettled').checked = false;
     syncChips('fPayType', 'payTypeChips', '계좌이체');
     syncChips('fCarrier', 'carrierChips', 'SK브로드밴드');
