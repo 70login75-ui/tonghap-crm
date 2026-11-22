@@ -1627,12 +1627,50 @@ function openConsultView(id) {
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       ${tel ? `<a class="btn-sm" href="tel:${tel}" style="text-decoration:none;background:#ECFDF5;color:#047857;border-color:#A7F3D0;padding:11px 14px;font-size:14px">📞 전화</a>` : ''}
-      <button type="button" class="btn-save" style="flex:1;padding:12px;font-size:14.5px" onclick="closeConsultView();editConsult('${c.id}')">✏️ 수정하기</button>
+      <button type="button" class="btn-save" style="flex:1;padding:12px;font-size:14.5px" onclick="editConsultInline('${c.id}')">✏️ 수정하기</button>
       <button type="button" class="btn-sm" style="padding:11px 14px;font-size:14px" onclick="closeConsultView();moveConsultToCustomer('${c.id}')">➕ 고객등록</button>
     </div>
   `;
   document.getElementById('consultViewBg').classList.add('open');
 }
+function editConsultInline(id) {
+  const c = consults.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('cvTitle').textContent = '상담 예약 수정';
+  document.getElementById('cvBody').innerHTML = `
+    <div class="grid2">
+      <div class="field"><label>예약 날짜</label><input id="cvDate" type="date" value="${esc(c.date||'')}"></div>
+      <div class="field"><label>예약 시간</label><input id="cvTime" type="time" value="${esc(c.time||'')}"></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>고객명</label><input id="cvName" value="${esc(c.name==='미상 고객'?'':(c.name||''))}"></div>
+      <div class="field"><label>연락처</label><input id="cvPhone" type="tel" value="${esc(c.phone||'')}" oninput="fmtPhoneInput(this)"></div>
+    </div>
+    <div class="field"><label>상담 내용</label><textarea id="cvMemo" rows="5">${esc(c.memo||'')}</textarea></div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button type="button" class="btn-sm" style="padding:12px 16px;font-size:14.5px" onclick="openConsultView('${c.id}')">취소</button>
+      <button type="button" class="btn-save" style="flex:1;padding:12px;font-size:15px" onclick="saveConsultInline('${c.id}')">수정 저장</button>
+    </div>
+  `;
+}
+
+function saveConsultInline(id) {
+  const idx = consults.findIndex(x => x.id === id);
+  if (idx === -1) return;
+  const date = document.getElementById('cvDate').value;
+  const time = document.getElementById('cvTime').value;
+  const name = document.getElementById('cvName').value.trim();
+  const phone = document.getElementById('cvPhone').value.trim();
+  const memo = document.getElementById('cvMemo').value.trim();
+  if (!name && !memo) { showToast('고객명 또는 상담 내용을 입력해 주세요.'); return; }
+  consults[idx] = { ...consults[idx], date, time, name: name || '미상 고객', phone, memo };
+  saveConsultStore();
+  updateConsultKpi();
+  renderConsultList();
+  openConsultView(id);
+  showToast('상담 예약이 수정되었습니다.');
+}
+
 function closeConsultView() {
   document.getElementById('consultViewBg').classList.remove('open');
 }
