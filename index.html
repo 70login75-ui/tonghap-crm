@@ -829,6 +829,10 @@ function fmtRrnInput(el) {
   const d = el.value.replace(/[^0-9]/g, '').slice(0, 13);
   el.value = d.length > 6 ? d.slice(0, 6) + '-' + d.slice(6) : d;
 }
+function fmtMoneyVal(v) {
+  const d = String(v || '').replace(/\D/g, '');
+  return d ? Number(d).toLocaleString('ko-KR') : '';
+}
 function fmtMoneyInput(el) {
   const digits = el.value.replace(/[^0-9]/g, '');
   el.value = digits ? Number(digits).toLocaleString('ko-KR') : '';
