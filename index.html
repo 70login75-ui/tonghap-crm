@@ -479,7 +479,7 @@
       <div class="logo-dot" style="background:#FFFFFF;padding:0;overflow:hidden;"><img src="logo-clover.png" alt="통합 INTERNET" style="width:100%;height:100%;object-fit:contain;border-radius:10px;display:block;"></div>
       <div>
         <div class="brand-txt">통합 <span style="font-size:1.25em;font-weight:900;color:#FFFFFF;letter-spacing:0.3px">INTERNET</span></div>
-        <div class="brand-sub">제작자 손 영 곤 V1.0</div>
+        <div class="brand-sub">제작자 손 영 곤 V1.1</div>
       </div>
     </div>
     <div class="hero-actions">
@@ -1752,7 +1752,12 @@ function renderConsultBanner() {
   const tomorrowStr = `${tm.getFullYear()}-${cbPad(tm.getMonth() + 1)}-${cbPad(tm.getDate())}`;
   const dismissed = getDismissedCb();
   const list = (consults || [])
-    .filter(c => c && (c.date === todayStr || c.date === tomorrowStr) && !dismissed.includes(cbDismissKey(c)))
+    .filter(c => {
+      if (!c) return false;
+      const nm = (c.name || '').trim();
+      if (!nm || nm === '미상' || nm === '미상 고객') return false;
+      return (c.date === todayStr || c.date === tomorrowStr) && !dismissed.includes(cbDismissKey(c));
+    })
     .sort((a, b) => (`${a.date} ${a.time || '99:99'}`).localeCompare(`${b.date} ${b.time || '99:99'}`));
   if (!list.length) {
     box.classList.remove('show');
@@ -2094,11 +2099,11 @@ function moveConsultToCustomer(id) {
   const c = consults.find(x => x.id === id);
   if (!c) return;
   closeConsultModal();
-  openAddModal();
+  openModal();
   document.getElementById('fName').value = c.name === '미상 고객' ? '' : c.name;
   document.getElementById('fPhone').value = c.phone || '';
   document.getElementById('fMemo').value = `[상담예약 ${c.date || ''} ${c.time || ''}]\n${c.memo || ''}`.trim();
-  if (c.photos && c.photos.length) { curPhotos = [...c.photos]; renderPreviews(); }
+  if (c.photos && c.photos.length) { tempPhotos = [...c.photos]; renderPreviewPhotos(); }
   syncModalCall();
   showToast('새 고객 등록 창으로 옮겼습니다.');
 }
