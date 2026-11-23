@@ -130,8 +130,14 @@
     border: none; background: transparent; padding: 2px 0; cursor: pointer;
     font-size: 12px; font-weight: 800; color: #009A3E; text-decoration: underline;
   }
-  .cb-item { background: #fff; border: 1px solid #D5F5E3; border-radius: 12px; padding: 10px 12px; margin-top: 8px; }
-  .cb-when { font-size: 14.5px; font-weight: 900; color: #0F172A; letter-spacing: -0.3px; line-height: 1.35; }
+  .cb-item { position: relative; background: #fff; border: 1px solid #D5F5E3; border-radius: 12px; padding: 10px 12px; margin-top: 8px; }
+  .cb-x {
+    position: absolute; top: 8px; right: 8px; width: 24px; height: 24px; border-radius: 50%;
+    border: 1px solid #CBD5E1; background: #F1F5F9; color: #64748B;
+    font-size: 13px; font-weight: 800; line-height: 1; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .cb-when { font-size: 14.5px; font-weight: 900; color: #0F172A; letter-spacing: -0.3px; line-height: 1.35; padding-right: 30px; }
   .cb-when .cb-day { color: #03C75A; }
   .cb-phone { font-size: 13px; font-weight: 700; color: #475569; }
   .cb-memo {
@@ -473,7 +479,7 @@
       <div class="logo-dot" style="background:#FFFFFF;padding:0;overflow:hidden;"><img src="logo-clover.png" alt="통합 INTERNET" style="width:100%;height:100%;object-fit:contain;border-radius:10px;display:block;"></div>
       <div>
         <div class="brand-txt">통합 <span style="font-size:1.25em;font-weight:900;color:#FFFFFF;letter-spacing:0.3px">INTERNET</span></div>
-        <div class="brand-sub">제작자 손 영 곤 V112</div>
+        <div class="brand-sub">제작자 손 영 곤 V113</div>
       </div>
     </div>
     <div class="hero-actions">
@@ -1727,8 +1733,21 @@ function renderConsultBanner() {
   const todayStr = `${now.getFullYear()}-${cbPad(now.getMonth() + 1)}-${cbPad(now.getDate())}`;
   const tm = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
   const tomorrowStr = `${tm.getFullYear()}-${cbPad(tm.getMonth() + 1)}-${cbPad(tm.getDate())}`;
+  var CB_DISMISSED_KEY = 'tonghap_crm_cb_dismissed_v1';
+  function cbDismissKey(c) { return `${c.id}|${c.date||''}|${c.time||''}`; }
+  function getDismissedCb() { try { return JSON.parse(localStorage.getItem(CB_DISMISSED_KEY) || '[]'); } catch { return []; } }
+  function dismissConsultBanner(id) {
+    const c = consults.find(x => x.id === id);
+    if (!c) return;
+    const arr = getDismissedCb();
+    const k = cbDismissKey(c);
+    if (!arr.includes(k)) arr.push(k);
+    localStorage.setItem(CB_DISMISSED_KEY, JSON.stringify(arr));
+    renderConsultBanner();
+  }
+  const dismissed = getDismissedCb();
   const list = (consults || [])
-    .filter(c => c && (c.date === todayStr || c.date === tomorrowStr))
+    .filter(c => c && (c.date === todayStr || c.date === tomorrowStr) && !dismissed.includes(cbDismissKey(c)))
     .sort((a, b) => (`${a.date} ${a.time || '99:99'}`).localeCompare(`${b.date} ${b.time || '99:99'}`));
   if (!list.length) {
     box.classList.remove('show');
@@ -1743,6 +1762,7 @@ function renderConsultBanner() {
     const memo = (c.memo || '').replace(/\s+/g, ' ').trim();
     const memoShort = memo.length > 42 ? memo.slice(0, 42) + '…' : memo;
     return `<div class="cb-item">
+      <button type="button" class="cb-x" aria-label="알림 닫기" onclick="dismissConsultBanner('${c.id}')">✕</button>
       <div class="cb-when"><span class="cb-day">${dayLabel} ${esc(c.time || '시간 미정')}</span> · ${esc(c.name || '미상 고객')}${c.phone ? ` <span class="cb-phone">(${esc(c.phone)})</span>` : ''}</div>
       ${memoShort ? `<div class="cb-memo">${esc(memoShort)}</div>` : ''}
       <div class="cb-btns">
