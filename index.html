@@ -2473,5 +2473,499 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 </script>
+<!-- TH_ACCESS_START -->
+<style>
+#thAccessGate{position:fixed;inset:0;z-index:99999;background:rgba(15,23,42,.92);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:18px;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif}
+#thAccessGate.hidden{display:none}
+.th-gate-card{width:100%;max-width:390px;background:#fff;border-radius:20px;padding:24px 20px;box-shadow:0 20px 50px rgba(0,0,0,.35);color:#0f172a}
+.th-gate-title{font-size:19px;font-weight:800;margin:0 0 6px;display:flex;align-items:center;gap:8px}
+.th-gate-sub{font-size:13px;color:#64748b;margin:0 0 16px;line-height:1.45}
+.th-gate-inp{width:100%;box-sizing:border-box;padding:12px 14px;border:1.5px solid #cbd5e1;border-radius:12px;font-size:15px;font-weight:700;outline:none;margin-bottom:10px;background:#f8fafc;color:#0f172a}
+.th-gate-inp:focus{border-color:#6366f1;background:#fff}
+.th-gate-btn{width:100%;padding:12px;border:none;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;background:#111827;color:#fff;margin-top:4px}
+.th-gate-btn:disabled{opacity:.6;cursor:not-allowed}
+.th-gate-btn.primary{background:#6d28d9}
+.th-gate-err{font-size:12.5px;color:#dc2626;font-weight:700;margin:8px 0 0;min-height:18px}
+.th-gate-toggle{margin-top:14px;text-align:center;font-size:12.5px;color:#64748b;cursor:pointer;text-decoration:underline;background:none;border:none;width:100%;padding:4px}
+#thAdminFab{position:fixed;right:14px;bottom:14px;z-index:9500;background:#111827;color:#fff;border:1.5px solid rgba(255,255,255,.25);border-radius:999px;padding:9px 14px;font-size:12.5px;font-weight:800;box-shadow:0 6px 20px rgba(0,0,0,.28);cursor:pointer;display:none;align-items:center;gap:6px;font-family:inherit}
+#thAdminFab.show{display:inline-flex}
+#thAdminModal{position:fixed;inset:0;z-index:99998;background:rgba(15,23,42,.72);display:none;align-items:center;justify-content:center;padding:14px;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif}
+#thAdminModal.open{display:flex}
+.th-adm-box{width:100%;max-width:520px;max-height:88vh;overflow-y:auto;background:#f8fafc;border-radius:20px;padding:18px;box-shadow:0 20px 50px rgba(0,0,0,.35);color:#0f172a}
+.th-adm-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px}
+.th-adm-head h3{margin:0;font-size:17px;font-weight:800}
+.th-adm-actions{display:flex;gap:6px;align-items:center}
+.th-sm-btn{border:1px solid #cbd5e1;background:#fff;color:#0f172a;border-radius:9px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer}
+.th-sm-btn.dark{background:#111827;color:#fff;border-color:#111827}
+.th-sm-btn.danger{background:#fee2e2;color:#b91c1c;border-color:#fecaca}
+.th-sm-btn.ok{background:#dcfce7;color:#15803d;border-color:#bbf7d0}
+.th-adm-card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px;margin-bottom:12px}
+.th-adm-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.th-adm-lbl{display:block;font-size:11.5px;font-weight:700;color:#475569;margin-bottom:3px}
+.th-adm-inp,.th-adm-sel{width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #cbd5e1;border-radius:9px;font-size:13px;font-weight:600;background:#fff;color:#0f172a}
+.th-code-row{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:12px 13px;margin-bottom:9px}
+.th-code-top{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.th-code-name{font-size:14.5px;font-weight:800;color:#0f172a}
+.th-code-key{font-family:ui-monospace,monospace;font-size:13px;font-weight:800;background:#eef2ff;color:#4338ca;padding:2px 8px;border-radius:6px;margin-left:5px}
+.th-badge{font-size:11px;font-weight:800;padding:3px 8px;border-radius:999px}
+.th-badge.on{background:#dcfce7;color:#166534}
+.th-badge.off{background:#fee2e2;color:#991b1b}
+.th-badge.exp{background:#fef3c7;color:#92400e}
+.th-badge.scope{background:#f1f5f9;color:#334155}
+.th-code-meta{font-size:12px;color:#475569;margin:7px 0 9px;line-height:1.5}
+.th-code-btns{display:flex;gap:6px;flex-wrap:wrap}
+</style>
+
+<div id="thAccessGate" class="hidden">
+  <div class="th-gate-card">
+    <div id="thGuestBox">
+      <div class="th-gate-title">🔐 통합 INTERNET 접속 인증</div>
+      <p class="th-gate-sub">전달받으신 접속 코드를 입력해 주세요.<br>(관리자 권한이 확인된 사용자만 이용 가능합니다)</p>
+      <input id="thCodeInput" class="th-gate-inp" type="text" placeholder="접속 코드 입력 (예: TH1234)" autocomplete="off" autocapitalize="characters">
+      <button id="thCodeSubmitBtn" class="th-gate-btn primary" type="button">접속 확인</button>
+      <div id="thGateErr" class="th-gate-err"></div>
+      <button id="thShowAdminLoginBtn" class="th-gate-toggle" type="button">👑 관리자 로그인 (대표님 전용)</button>
+    </div>
+    <div id="thAdminLoginBox" style="display:none">
+      <div class="th-gate-title">👑 관리자 로그인</div>
+      <p class="th-gate-sub">대표님 구글 관리자 계정으로 로그인하면 접속 코드 발급·차단·사용 현황을 관리할 수 있습니다.</p>
+      <input id="thAdmEmail" class="th-gate-inp" type="email" value="70login75@gmail.com" placeholder="관리자 이메일">
+      <input id="thAdmPass" class="th-gate-inp" type="password" placeholder="관리자 비밀번호">
+      <button id="thAdmLoginBtn" class="th-gate-btn" type="button">관리자 로그인</button>
+      <div id="thAdmLoginErr" class="th-gate-err"></div>
+      <button id="thShowGuestBtn" class="th-gate-toggle" type="button">← 접속 코드 입력으로 돌아가기</button>
+    </div>
+  </div>
+</div>
+
+<button id="thAdminFab" type="button">👑 접속관리</button>
+
+<div id="thAdminModal">
+  <div class="th-adm-box">
+    <div class="th-adm-head">
+      <h3>👑 접속 코드 · 사용 현황 관리</h3>
+      <div class="th-adm-actions">
+        <button id="thAdmRefreshBtn" class="th-sm-btn" type="button">🔄 새로고침</button>
+        <button id="thAdmLogoutBtn" class="th-sm-btn danger" type="button">로그아웃</button>
+        <button id="thAdmCloseBtn" class="th-sm-btn dark" type="button">닫기</button>
+      </div>
+    </div>
+
+    <div class="th-adm-card">
+      <div style="font-size:13.5px;font-weight:800;margin-bottom:10px">➕ 새 접속 코드 발급</div>
+      <div class="th-adm-grid">
+        <div>
+          <label class="th-adm-lbl">사용자 이름 / 메모</label>
+          <input id="thNewName" class="th-adm-inp" type="text" placeholder="예: 김대리">
+        </div>
+        <div>
+          <label class="th-adm-lbl">접속 코드 (비우면 자동생성)</label>
+          <input id="thNewCode" class="th-adm-inp" type="text" placeholder="예: TH4829" autocapitalize="characters">
+        </div>
+        <div>
+          <label class="th-adm-lbl">허용 앱</label>
+          <select id="thNewScope" class="th-adm-sel">
+            <option value="all">전체 (통신비서+고객관리)</option>
+            <option value="calc">통합 통신비서만</option>
+            <option value="crm">통합고객관리만</option>
+          </select>
+        </div>
+        <div>
+          <label class="th-adm-lbl">만료일 (비우면 무기한)</label>
+          <input id="thNewExp" class="th-adm-inp" type="date">
+        </div>
+      </div>
+      <button id="thCreateCodeBtn" class="th-gate-btn primary" type="button" style="padding:10px;font-size:13.5px">+ 코드 발급하기</button>
+    </div>
+
+    <div id="thCodeListWrap">
+      <div style="text-align:center;color:#64748b;font-size:13px;padding:18px">불러오는 중...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const APP_ID = "crm";
+  const APP_TITLE = "통합 INTERNET";
+  const FB_API_KEY = "AIzaSyDLVIaCoVXMJY8EoWcm-uqLKwo-81ySbRI";
+  const FB_DB = "https://tonghap-calc-default-rtdb.firebaseio.com";
+  const ADMIN_UID = "AQqKAh0Zy5eBjpdOcQ3ksHNalAs2";
+  const LS_CODE = "th_fb_access_code_v1";
+  const LS_ADMIN = "th_fb_admin_auth_v1";
+
+  const gate = document.getElementById("thAccessGate");
+  const guestBox = document.getElementById("thGuestBox");
+  const adminLoginBox = document.getElementById("thAdminLoginBox");
+  const codeInp = document.getElementById("thCodeInput");
+  const codeBtn = document.getElementById("thCodeSubmitBtn");
+  const gateErr = document.getElementById("thGateErr");
+  const admEmail = document.getElementById("thAdmEmail");
+  const admPass = document.getElementById("thAdmPass");
+  const admLoginBtn = document.getElementById("thAdmLoginBtn");
+  const admLoginErr = document.getElementById("thAdmLoginErr");
+  const admFab = document.getElementById("thAdminFab");
+  const admModal = document.getElementById("thAdminModal");
+  const listWrap = document.getElementById("thCodeListWrap");
+
+  let lastUsePing = 0;
+
+  function kstToday(){
+    const d = new Date(Date.now() + 9 * 3600 * 1000);
+    return d.toISOString().slice(0, 10);
+  }
+  function fmtTime(ms){
+    if(!ms) return "기록 없음";
+    const d = new Date(ms + 9 * 3600 * 1000);
+    return d.toISOString().slice(0, 16).replace("T", " ");
+  }
+  function appLabel(id){
+    if(id === "calc-purple") return "통신비서(퍼플)";
+    if(id === "calc-green") return "통신비서(그린)";
+    if(id === "crm") return "통합고객관리";
+    return id || "-";
+  }
+  function scopeLabel(s){
+    if(s === "calc") return "통신비서만";
+    if(s === "crm") return "고객관리만";
+    return "전체 앱";
+  }
+  function scopeAllows(scope){
+    if(!scope || scope === "all") return true;
+    if(scope === "calc") return APP_ID === "calc-purple" || APP_ID === "calc-green";
+    if(scope === "crm") return APP_ID === "crm";
+    return false;
+  }
+  function normCode(raw){
+    return String(raw || "").trim().toUpperCase().replace(/[^A-Z0-9_-]/g, "");
+  }
+
+  function showGate(msg){
+    if(msg) gateErr.textContent = msg;
+    gate.classList.remove("hidden");
+  }
+  function hideGate(){
+    gateErr.textContent = "";
+    gate.classList.add("hidden");
+  }
+
+  async function getValidAdminAuth(){
+    let raw = localStorage.getItem(LS_ADMIN);
+    if(!raw) return null;
+    try{
+      const a = JSON.parse(raw);
+      if(!a || !a.refreshToken) return null;
+      if(a.idToken && a.expiresAt && Date.now() < a.expiresAt - 60000){
+        return a;
+      }
+      const res = await fetch("https://securetoken.googleapis.com/v1/token?key=" + FB_API_KEY, {
+        method: "POST",
+        headers: {"Content-Type":"application/x-www-form-urlencoded"},
+        body: "grant_type=refresh_token&refresh_token=" + encodeURIComponent(a.refreshToken)
+      });
+      if(!res.ok){ localStorage.removeItem(LS_ADMIN); return null; }
+      const d = await res.json();
+      if(d.user_id !== ADMIN_UID){ localStorage.removeItem(LS_ADMIN); return null; }
+      const updated = {
+        idToken: d.id_token,
+        refreshToken: d.refresh_token || a.refreshToken,
+        expiresAt: Date.now() + (Number(d.expires_in || 3600) * 1000),
+        email: a.email
+      };
+      localStorage.setItem(LS_ADMIN, JSON.stringify(updated));
+      return updated;
+    }catch(e){ return null; }
+  }
+
+  async function verifyGuestCode(code, isSilent){
+    const c = normCode(code);
+    if(!c) return { ok: false, msg: "접속 코드를 입력해 주세요." };
+    try{
+      const res = await fetch(FB_DB + "/codes/" + encodeURIComponent(c) + ".json", { cache: "no-store" });
+      if(!res.ok) return { ok: false, msg: "서버 연결에 실패했습니다. 잠시 후 다시 시도해 주세요." };
+      const data = await res.json();
+      if(!data || data.active !== true){
+        return { ok: false, msg: "⛔ 사용이 중지되었거나 등록되지 않은 접속 코드입니다." };
+      }
+      if(!scopeAllows(data.scope)){
+        return { ok: false, msg: "⛔ 이 앱(" + APP_TITLE + ")에 허용되지 않은 접속 코드입니다." };
+      }
+      if(data.expiresAt && kstToday() > data.expiresAt){
+        return { ok: false, msg: "⏰ 사용 기간(" + data.expiresAt + ")이 만료된 접속 코드입니다." };
+      }
+      localStorage.setItem(LS_CODE, c);
+      if(!isSilent){
+        logUsage(c, "open");
+      }
+      return { ok: true, code: c, data };
+    }catch(e){
+      return { ok: false, msg: "네트워크 오류로 인증할 수 없습니다." };
+    }
+  }
+
+  function logUsage(code, type){
+    if(!code) return;
+    const now = Date.now();
+    try{
+      fetch(FB_DB + "/usage/" + encodeURIComponent(code) + "/last.json", {
+        method: "PATCH",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ seen: now, app: APP_ID })
+      }).catch(()=>{});
+      fetch(FB_DB + "/usage/" + encodeURIComponent(code) + "/events.json", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ app: APP_ID, type: type || "use", at: now })
+      }).catch(()=>{});
+    }catch(e){}
+  }
+
+  async function boot(){
+    const adm = await getValidAdminAuth();
+    if(adm){
+      hideGate();
+      admFab.classList.add("show");
+      return;
+    }
+    const saved = localStorage.getItem(LS_CODE);
+    if(saved){
+      const r = await verifyGuestCode(saved, false);
+      if(r.ok){
+        hideGate();
+        return;
+      }
+      localStorage.removeItem(LS_CODE);
+      showGate(r.msg);
+      return;
+    }
+    showGate("");
+  }
+
+  codeBtn.addEventListener("click", async () => {
+    const c = normCode(codeInp.value);
+    if(!c){ gateErr.textContent = "접속 코드를 입력해 주세요."; return; }
+    codeBtn.disabled = true;
+    codeBtn.textContent = "확인 중...";
+    gateErr.textContent = "";
+    const r = await verifyGuestCode(c, false);
+    codeBtn.disabled = false;
+    codeBtn.textContent = "접속 확인";
+    if(r.ok){ hideGate(); } else { gateErr.textContent = r.msg; }
+  });
+  codeInp.addEventListener("keydown", e => { if(e.key === "Enter") codeBtn.click(); });
+
+  document.getElementById("thShowAdminLoginBtn").addEventListener("click", () => {
+    guestBox.style.display = "none";
+    adminLoginBox.style.display = "block";
+    admLoginErr.textContent = "";
+  });
+  document.getElementById("thShowGuestBtn").addEventListener("click", () => {
+    adminLoginBox.style.display = "none";
+    guestBox.style.display = "block";
+    gateErr.textContent = "";
+  });
+
+  admLoginBtn.addEventListener("click", async () => {
+    const email = admEmail.value.trim();
+    const pass = admPass.value;
+    if(!email || !pass){ admLoginErr.textContent = "이메일과 비밀번호를 입력해 주세요."; return; }
+    admLoginBtn.disabled = true;
+    admLoginBtn.textContent = "로그인 중...";
+    admLoginErr.textContent = "";
+    try{
+      const res = await fetch("https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=" + FB_API_KEY, {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ email, password: pass, returnSecureToken: true })
+      });
+      const d = await res.json();
+      if(!res.ok || d.localId !== ADMIN_UID){
+        admLoginErr.textContent = "관리자 계정 정보가 올바르지 않습니다.";
+      } else {
+        localStorage.setItem(LS_ADMIN, JSON.stringify({
+          idToken: d.idToken,
+          refreshToken: d.refreshToken,
+          expiresAt: Date.now() + (Number(d.expiresIn || 3600) * 1000),
+          email
+        }));
+        admPass.value = "";
+        hideGate();
+        admFab.classList.add("show");
+      }
+    }catch(e){
+      admLoginErr.textContent = "로그인 요청 중 오류가 발생했습니다.";
+    }
+    admLoginBtn.disabled = false;
+    admLoginBtn.textContent = "관리자 로그인";
+  });
+  admPass.addEventListener("keydown", e => { if(e.key === "Enter") admLoginBtn.click(); });
+
+  // Silent usage ping on guest interactions (max once per 15s)
+  document.addEventListener("click", () => {
+    if(localStorage.getItem(LS_ADMIN)) return;
+    const c = localStorage.getItem(LS_CODE);
+    if(!c || !gate.classList.contains("hidden")) return;
+    if(Date.now() - lastUsePing > 15000){
+      lastUsePing = Date.now();
+      logUsage(c, "use");
+    }
+  }, true);
+
+  // Re-verify immediately when returning to app
+  document.addEventListener("visibilitychange", async () => {
+    if(document.visibilityState !== "visible") return;
+    const adm = await getValidAdminAuth();
+    if(adm) return;
+    const c = localStorage.getItem(LS_CODE);
+    if(!c){ showGate(""); return; }
+    const r = await verifyGuestCode(c, true);
+    if(!r.ok){
+      localStorage.removeItem(LS_CODE);
+      showGate(r.msg);
+    }
+  });
+
+  // Admin Panel logic
+  async function loadAdminData(){
+    listWrap.innerHTML = '<div style="text-align:center;color:#64748b;font-size:13px;padding:18px">불러오는 중...</div>';
+    const adm = await getValidAdminAuth();
+    if(!adm){
+      admModal.classList.remove("open");
+      admFab.classList.remove("show");
+      showGate("관리자 세션이 만료되었습니다. 다시 로그인해 주세요.");
+      return;
+    }
+    try{
+      const [cRes, uRes] = await Promise.all([
+        fetch(FB_DB + "/codes.json?auth=" + encodeURIComponent(adm.idToken), { cache: "no-store" }),
+        fetch(FB_DB + "/usage.json?auth=" + encodeURIComponent(adm.idToken), { cache: "no-store" })
+      ]);
+      const codes = (await cRes.json()) || {};
+      const usage = (await uRes.json()) || {};
+      const keys = Object.keys(codes).sort((a,b) => (codes[b].createdAt||0) - (codes[a].createdAt||0));
+      if(keys.length === 0){
+        listWrap.innerHTML = '<div style="text-align:center;color:#64748b;font-size:13px;padding:18px">아직 발급된 접속 코드가 없습니다. 위에서 코드를 발급해 보세요.</div>';
+        return;
+      }
+      const today = kstToday();
+      listWrap.innerHTML = "";
+      keys.forEach(code => {
+        const item = codes[code] || {};
+        const u = usage[code] || {};
+        const events = u.events ? Object.values(u.events) : [];
+        const opens = events.filter(x => x.type === "open").length;
+        const uses = events.filter(x => x.type === "use").length;
+        const lastSeen = u.last && u.last.seen ? fmtTime(u.last.seen) + " (" + appLabel(u.last.app) + ")" : "아직 접속 없음";
+        const isExpired = !!(item.expiresAt && today > item.expiresAt);
+        let badge = '<span class="th-badge on">🟢 사용중</span>';
+        if(!item.active) badge = '<span class="th-badge off">🔴 차단됨</span>';
+        else if(isExpired) badge = '<span class="th-badge exp">⏰ 만료됨</span>';
+
+        const row = document.createElement("div");
+        row.className = "th-code-row";
+        row.innerHTML = `
+          <div class="th-code-top">
+            <div>
+              <span class="th-code-name">${(item.name||"이름없음").replace(/</g,"&lt;")}</span>
+              <span class="th-code-key">${code}</span>
+            </div>
+            <div style="display:flex;gap:4px;align-items:center">
+              <span class="th-badge scope">${scopeLabel(item.scope)}</span>
+              ${badge}
+            </div>
+          </div>
+          <div class="th-code-meta">
+            • 최근 접속: <b>${lastSeen}</b><br>
+            • 누적 현황: 접속 <b>${opens}회</b> · 사용 <b>${uses}회</b> · 만료일: <b>${item.expiresAt || "무기한"}</b>
+          </div>
+          <div class="th-code-btns">
+            <button class="th-sm-btn ${item.active ? "danger" : "ok"}" data-act="toggle">${item.active ? "⛔ 즉시 차단" : "✅ 차단 해제"}</button>
+            <button class="th-sm-btn" data-act="exp">📅 만료일 변경</button>
+            <button class="th-sm-btn" data-act="copy">📋 안내복사</button>
+            <button class="th-sm-btn danger" data-act="del">🗑 삭제</button>
+          </div>
+        `;
+        row.querySelector('[data-act="toggle"]').addEventListener("click", async () => {
+          const a = await getValidAdminAuth();
+          if(!a) return loadAdminData();
+          await fetch(FB_DB + "/codes/" + encodeURIComponent(code) + "/active.json?auth=" + encodeURIComponent(a.idToken), {
+            method: "PUT",
+            headers: {"Content-Type":"application/json"},
+            body: JSON.stringify(!item.active)
+          });
+          loadAdminData();
+        });
+        row.querySelector('[data-act="exp"]').addEventListener("click", async () => {
+          const nv = prompt("새 만료일을 YYYY-MM-DD 형식으로 입력하세요 (무기한은 빈칸 후 확인):", item.expiresAt || "");
+          if(nv === null) return;
+          const clean = nv.trim();
+          if(clean && !/^\d{4}-\d{2}-\d{2}$/.test(clean)){ alert("YYYY-MM-DD 형식(예: 2026-12-31)으로 입력해 주세요."); return; }
+          const a = await getValidAdminAuth();
+          if(!a) return loadAdminData();
+          await fetch(FB_DB + "/codes/" + encodeURIComponent(code) + "/expiresAt.json?auth=" + encodeURIComponent(a.idToken), {
+            method: "PUT",
+            headers: {"Content-Type":"application/json"},
+            body: JSON.stringify(clean || null)
+          });
+          loadAdminData();
+        });
+        row.querySelector('[data-act="copy"]').addEventListener("click", async () => {
+          const txt = "[" + APP_TITLE + " 접속 안내]\n주소: " + location.origin + location.pathname + "\n접속 코드: " + code + (item.expiresAt ? "\n사용 기한: " + item.expiresAt + "까지" : "");
+          try{ await navigator.clipboard.writeText(txt); alert("접속 안내 문구가 복사되었습니다!\n\n" + txt); }catch(e){ prompt("아래 문구를 복사해 전달하세요:", txt); }
+        });
+        row.querySelector('[data-act="del"]').addEventListener("click", async () => {
+          if(!confirm(code + " (" + (item.name||"") + ") 코드를 완전히 삭제할까요?")) return;
+          const a = await getValidAdminAuth();
+          if(!a) return loadAdminData();
+          await fetch(FB_DB + "/codes/" + encodeURIComponent(code) + ".json?auth=" + encodeURIComponent(a.idToken), { method: "DELETE" });
+          await fetch(FB_DB + "/usage/" + encodeURIComponent(code) + ".json?auth=" + encodeURIComponent(a.idToken), { method: "DELETE" });
+          loadAdminData();
+        });
+        listWrap.appendChild(row);
+      });
+    }catch(e){
+      listWrap.innerHTML = '<div style="text-align:center;color:#dc2626;font-size:13px;padding:18px">데이터를 불러오지 못했습니다.</div>';
+    }
+  }
+
+  document.getElementById("thCreateCodeBtn").addEventListener("click", async () => {
+    const adm = await getValidAdminAuth();
+    if(!adm) return loadAdminData();
+    const name = document.getElementById("thNewName").value.trim() || "사용자";
+    let code = normCode(document.getElementById("thNewCode").value);
+    if(!code) code = "TH" + Math.floor(1000 + Math.random() * 9000);
+    const scope = document.getElementById("thNewScope").value || "all";
+    const exp = document.getElementById("thNewExp").value.trim() || null;
+    const btn = document.getElementById("thCreateCodeBtn");
+    btn.disabled = true;
+    btn.textContent = "발급 중...";
+    await fetch(FB_DB + "/codes/" + encodeURIComponent(code) + ".json?auth=" + encodeURIComponent(adm.idToken), {
+      method: "PUT",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ name, scope, active: true, expiresAt: exp, createdAt: Date.now() })
+    });
+    document.getElementById("thNewName").value = "";
+    document.getElementById("thNewCode").value = "";
+    document.getElementById("thNewExp").value = "";
+    btn.disabled = false;
+    btn.textContent = "+ 코드 발급하기";
+    loadAdminData();
+  });
+
+  admFab.addEventListener("click", () => { admModal.classList.add("open"); loadAdminData(); });
+  document.getElementById("thAdmCloseBtn").addEventListener("click", () => admModal.classList.remove("open"));
+  document.getElementById("thAdmRefreshBtn").addEventListener("click", loadAdminData);
+  document.getElementById("thAdmLogoutBtn").addEventListener("click", () => {
+    if(!confirm("관리자 로그아웃 하시겠습니까?")) return;
+    localStorage.removeItem(LS_ADMIN);
+    admModal.classList.remove("open");
+    admFab.classList.remove("show");
+    boot();
+  });
+
+  boot();
+})();
+</script>
+<!-- TH_ACCESS_END -->
 </body>
 </html>
