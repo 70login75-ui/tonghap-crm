@@ -164,10 +164,16 @@
   .chips { display: flex; gap: 7px; overflow-x: auto; padding: 12px 0 6px; scrollbar-width: none; }
   .chips::-webkit-scrollbar { display: none; }
   .chip {
-    flex: 0 0 auto; padding: 9px 16px; border-radius: 999px; border: 1px solid var(--line);
+    flex: 0 0 auto; padding: 9px 16px; border-radius: 999px; border: 1.5px solid #86EFAC;
     background: #fff; color: var(--ink2); font-size: 15px; font-weight: 800; cursor: pointer;
     transition: all .15s ease;
   }
+  .chip-select {
+    flex: 0 0 auto; width: 132px; padding: 9px 12px; border-radius: 999px; border: 1.5px solid #86EFAC;
+    background: #fff; color: var(--ink2); font-size: 15px; font-weight: 800; font-family: inherit;
+    cursor: pointer; outline: none; transition: all .15s ease;
+  }
+  .chip-select.active { background: #ECFDF5; color: #047857; border-color: #16A34A; }
   .chip.active { background: #E8FBF0; color: #009A3E; border-color: #03C75A; box-shadow: 0 3px 10px rgba(3,199,90,.15); }
 
   .bar-meta {
@@ -494,7 +500,7 @@
       <div class="logo-dot" style="background:#FFFFFF;padding:0;overflow:hidden;"><img src="logo-clover.png" alt="통합 INTERNET" style="width:100%;height:100%;object-fit:contain;border-radius:10px;display:block;"></div>
       <div>
         <div class="brand-txt">통합 <span style="font-size:1.25em;font-weight:900;color:#FFFFFF;letter-spacing:0.3px">INTERNET</span></div>
-        <div class="brand-sub">제작자 손 영 곤 V2.9</div>
+        <div class="brand-sub">제작자 손 영 곤 V3.0</div>
       </div>
     </div>
     <div class="hero-actions">
@@ -526,12 +532,15 @@
   <div class="chips" id="chips">
     <button class="chip" data-f="미개통" onclick="setFilter('미개통',this)">미개통</button>
     <button class="chip" data-f="개통완료" onclick="setFilter('개통완료',this)">개통완료</button>
-    <button class="chip" data-f="SKB" onclick="setFilter('SKB',this)">SKB</button>
-    <button class="chip" data-f="SKT" onclick="setFilter('SKT',this)">SKT</button>
-    <button class="chip" data-f="KT" onclick="setFilter('KT',this)">KT</button>
-    <button class="chip" data-f="LG U+" onclick="setFilter('LG U+',this)">LG U+</button>
-    <button class="chip" data-f="스카이라이프" onclick="setFilter('스카이라이프',this)">스카이라이프</button>
-    <button class="chip" data-f="LG헬로비전" onclick="setFilter('LG헬로비전',this)">LG헬로비전</button>
+    <select id="carrierFilter" class="chip-select" onchange="setCarrierFilter(this.value)">
+      <option value="">통신사 전체</option>
+      <option value="KT">KT</option>
+      <option value="SKT">SKT</option>
+      <option value="SKB">SKB</option>
+      <option value="LG U+">LG U+</option>
+      <option value="LG헬로비전">LG헬로비전</option>
+      <option value="스카이라이프">스카이라이프</option>
+    </select>
   </div>
 
   <div class="bar-meta">
@@ -939,6 +948,7 @@ function quickFilter(f) {
 }
 
 function setFilter(f, btn) {
+  if (btn && filter === f) f = '전체';
   filter = f;
   document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
   const targetBtn = document.querySelector(`.chip[data-f="${f}"]`);
@@ -947,6 +957,12 @@ function setFilter(f, btn) {
     k.classList.toggle('active', k.getAttribute('data-kf') === f);
   });
   
+  render();
+}
+
+function setCarrierFilter(val) {
+  const el = document.getElementById('carrierFilter');
+  if (el) el.classList.toggle('active', !!val);
   render();
 }
 
@@ -1076,6 +1092,9 @@ function render() {
     if (filter === '만료임박' && !(d !== null && d <= 90 && x.status !== '보류취소')) return false;
     if (filter === '개통완료' && x.status !== '개통완료') return false;
     if (filter === '미개통' && x.status === '개통완료') return false;
+    const cf = document.getElementById('carrierFilter')?.value || '';
+    if (cf === 'SKB') { if (!(x.carrier === 'SKB' || x.carrier === 'SK브로드밴드')) return false; }
+    else if (cf && x.carrier !== cf) return false;
     if (filter === 'SKB') { if (!(x.carrier === 'SKB' || x.carrier === 'SK브로드밴드')) return false; }
     else if (['SKT','KT','LG U+','스카이라이프','LG헬로비전'].includes(filter) && x.carrier !== filter) return false;
     if (filter === '미정산' && (x.settled || x.status === '보류취소')) return false;
