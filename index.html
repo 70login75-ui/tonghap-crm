@@ -479,7 +479,7 @@
       <div class="logo-dot" style="background:#FFFFFF;padding:0;overflow:hidden;"><img src="logo-clover.png" alt="통합 INTERNET" style="width:100%;height:100%;object-fit:contain;border-radius:10px;display:block;"></div>
       <div>
         <div class="brand-txt">통합 <span style="font-size:1.25em;font-weight:900;color:#FFFFFF;letter-spacing:0.3px">INTERNET</span></div>
-        <div class="brand-sub">제작자 손 영 곤 V1.5</div>
+        <div class="brand-sub">제작자 손 영 곤 V1.6</div>
       </div>
     </div>
     <div class="hero-actions">
@@ -1722,9 +1722,31 @@ var consults = [];
 try { consults = JSON.parse(localStorage.getItem(CONSULT_KEY) || '[]'); } catch { consults = []; }
 function saveConsultStore() { localStorage.setItem(CONSULT_KEY, JSON.stringify(consults)); }
 
+function extractConsultUnit(c) {
+  const txt = `${(c && c.name) || ''} ${(c && c.memo) || ''}`;
+  let m = txt.match(/(\d{1,4})\s*동\s*(\d{1,4})\s*호/);
+  if (m) return `${m[1]}동 ${m[2]}호`;
+  m = txt.match(/(\d{1,4})\s*호/);
+  if (m) return `${m[1]}호`;
+  m = txt.match(/(\d{1,4})\s*동/);
+  if (m) return `${m[1]}동`;
+  return '';
+}
+
+function getConsultDisplayLabel(c) {
+  const raw = ((c && c.name) || '').trim();
+  const nm = (raw === '미상' || raw === '미상 고객') ? '' : raw;
+  const unit = extractConsultUnit(c);
+  if (nm && unit) {
+    const nmNorm = nm.replace(/\s+/g, '');
+    const uNorm = unit.replace(/\s+/g, '');
+    return nmNorm.includes(uNorm) ? nm : `${nm} · ${unit}`;
+  }
+  return nm || unit || '';
+}
+
 function isNamedConsult(c) {
-  const nm = (c && c.name || '').trim();
-  return Boolean(nm && nm !== '미상' && nm !== '미상 고객');
+  return Boolean(getConsultDisplayLabel(c));
 }
 
 function updateConsultKpi() {
@@ -1802,11 +1824,12 @@ function renderConsultBanner() {
   const items = shown.map(c => {
     const dayLabel = c.date === todayStr ? '오늘' : '내일';
     const effTime = extractConsultHHMM(c);
+    const dispLabel = getConsultDisplayLabel(c);
     const memo = (c.memo || '').replace(/\s+/g, ' ').trim();
     const memoShort = memo.length > 42 ? memo.slice(0, 42) + '…' : memo;
     return `<div class="cb-item">
       <button type="button" class="cb-x" aria-label="알림 닫기" onclick="dismissConsultBanner('${c.id}')">✕</button>
-      <div class="cb-when"><span class="cb-day">${dayLabel} ${esc(effTime || '시간 미정')}</span> · ${esc(c.name || '미상 고객')}${c.phone ? ` <span class="cb-phone">(${esc(c.phone)})</span>` : ''}</div>
+      <div class="cb-when"><span class="cb-day">${dayLabel} ${esc(effTime || '시간 미정')}</span> · ${esc(dispLabel)}${c.phone ? ` <span class="cb-phone">(${esc(c.phone)})</span>` : ''}</div>
       ${memoShort ? `<div class="cb-memo">${esc(memoShort)}</div>` : ''}
       <div class="cb-btns">
         <button type="button" class="cb-btn" onclick="viewConsultFromBanner('${c.id}')">예약 보기</button>
@@ -2225,7 +2248,7 @@ function renderConsultList() {
   }
   box.innerHTML = dayRows.map(c => {
     const tel = (c.phone || '').replace(/\D/g, '');
-    const dispName = (c.name && c.name !== '미상 고객') ? c.name : '';
+    const dispName = getConsultDisplayLabel(c);
     const effTime = extractConsultHHMM(c) || c.time || '시간 미정';
     return `<div onclick="openConsultView('${c.id}')" style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:11px 12px;cursor:pointer">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
