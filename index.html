@@ -479,7 +479,7 @@
       <div class="logo-dot" style="background:#FFFFFF;padding:0;overflow:hidden;"><img src="logo-clover.png" alt="통합 INTERNET" style="width:100%;height:100%;object-fit:contain;border-radius:10px;display:block;"></div>
       <div>
         <div class="brand-txt">통합 <span style="font-size:1.25em;font-weight:900;color:#FFFFFF;letter-spacing:0.3px">INTERNET</span></div>
-        <div class="brand-sub">제작자 손 영 곤 V1.6</div>
+        <div class="brand-sub">제작자 손 영 곤 V1.7</div>
       </div>
     </div>
     <div class="hero-actions">
@@ -709,7 +709,18 @@
     </div>
     <div class="grid2">
       <div class="field"><label>예약 날짜</label><input id="cDate" type="date"></div>
-      <div class="field"><label>예약 시간</label><input id="cTime" type="time"></div>
+      <div class="field">
+        <label>예약 시간</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+          <select id="cTimeAmPm" onchange="cTimeTouched=true;syncCTimeFromSelects()" aria-label="오전 오후">
+            <option value="AM">오전</option>
+            <option value="PM">오후</option>
+          </select>
+          <select id="cTimeHour" onchange="cTimeTouched=true;syncCTimeFromSelects()" aria-label="시"></select>
+          <select id="cTimeMin" onchange="cTimeTouched=true;syncCTimeFromSelects()" aria-label="분"></select>
+        </div>
+        <input id="cTime" type="hidden" value="09:00">
+      </div>
     </div>
     <div class="grid2">
       <div class="field"><label>고객명</label><input id="cName" placeholder="예: 홍길동"></div>
@@ -1884,6 +1895,7 @@ function openConsultModal() {
   if (!document.getElementById('cDate').value) {
     document.getElementById('cDate').value = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
   }
+  if (!editingConsultId && !cTimeTouched) setCTimePick('09:00');
   renderConsultList();
   document.getElementById('consultBg').classList.add('open');
 }
@@ -2009,15 +2021,71 @@ function closeConsultModal() {
   document.getElementById('consultBg').classList.remove('open');
 }
 
+let cTimeTouched = false;
+function initCTimeSelects() {
+  const hSel = document.getElementById('cTimeHour');
+  const mSel = document.getElementById('cTimeMin');
+  if (!hSel || !mSel) return;
+  if (!hSel.options.length) {
+    for (let h = 0; h <= 12; h++) {
+      const o = document.createElement('option');
+      o.value = String(h);
+      o.textContent = h + '시';
+      hSel.appendChild(o);
+    }
+  }
+  if (!mSel.options.length) {
+    for (let m = 0; m <= 59; m++) {
+      const mm = String(m).padStart(2, '0');
+      const o = document.createElement('option');
+      o.value = mm;
+      o.textContent = mm + '분';
+      mSel.appendChild(o);
+    }
+  }
+}
+function syncCTimeFromSelects() {
+  const apEl = document.getElementById('cTimeAmPm');
+  const hEl = document.getElementById('cTimeHour');
+  const mEl = document.getElementById('cTimeMin');
+  const tEl = document.getElementById('cTime');
+  if (!apEl || !hEl || !mEl || !tEl) return;
+  const ap = apEl.value;
+  const h = parseInt(hEl.value || '9', 10);
+  const m = String(mEl.value || '00').padStart(2, '0');
+  let h24 = h;
+  if (ap === 'AM') { if (h === 12) h24 = 0; }
+  else { if (h < 12) h24 = h + 12; }
+  tEl.value = String(h24).padStart(2, '0') + ':' + m;
+}
+function setCTimePick(hhmm) {
+  initCTimeSelects();
+  const apEl = document.getElementById('cTimeAmPm');
+  const hEl = document.getElementById('cTimeHour');
+  const mEl = document.getElementById('cTimeMin');
+  const tEl = document.getElementById('cTime');
+  const val = (hhmm && /^\d{2}:\d{2}$/.test(hhmm)) ? hhmm : '09:00';
+  const parts = val.split(':');
+  const h24 = parseInt(parts[0], 10);
+  const mm = String(parseInt(parts[1], 10)).padStart(2, '0');
+  const ap = h24 >= 12 ? 'PM' : 'AM';
+  const h12 = h24 >= 12 ? (h24 === 12 ? 12 : h24 - 12) : h24;
+  if (apEl) apEl.value = ap;
+  if (hEl) hEl.value = String(h12);
+  if (mEl) mEl.value = mm;
+  if (tEl) tEl.value = val;
+}
+
 function cancelEditConsult() {
   editingConsultId = null;
+  cTimeTouched = false;
   const sb = document.getElementById('consultSaveBtn');
   const cb = document.getElementById('consultCancelBtn');
   if (sb) sb.textContent = '상담 예약 저장';
   if (cb) cb.style.display = 'none';
   if (document.getElementById('cName')) document.getElementById('cName').value = '';
   if (document.getElementById('cPhone')) document.getElementById('cPhone').value = '';
-  if (document.getElementById('cTime')) document.getElementById('cTime').value = '';
+  setCTimePick('09:00');
   if (document.getElementById('cMemo')) document.getElementById('cMemo').value = '';
   consultPhotos = [];
   renderConsultPhotoGrid();
@@ -2098,8 +2166,9 @@ function editConsult(id) {
   const c = consults.find(x => x.id === id);
   if (!c) return;
   editingConsultId = id;
+  cTimeTouched = Boolean(c.time && /^\d{2}:\d{2}$/.test(c.time));
   document.getElementById('cDate').value = c.date || '';
-  document.getElementById('cTime').value = c.time || '';
+  setCTimePick(c.time || '09:00');
   document.getElementById('cName').value = c.name === '미상 고객' ? '' : (c.name || '');
   document.getElementById('cPhone').value = c.phone || '';
   document.getElementById('cMemo').value = c.memo || '';
@@ -2113,11 +2182,16 @@ function editConsult(id) {
 }
 
 function saveConsult() {
+  syncCTimeFromSelects();
   const date = document.getElementById('cDate').value;
-  const time = document.getElementById('cTime').value;
+  let time = document.getElementById('cTime').value || '09:00';
   const name = document.getElementById('cName').value.trim();
   const phone = document.getElementById('cPhone').value.trim();
   const memo = document.getElementById('cMemo').value.trim();
+  if (!cTimeTouched) {
+    const memoTime = extractConsultHHMM({ name, memo });
+    if (memoTime) time = memoTime;
+  }
   if (!name && !memo) { showToast('고객명 또는 상담 내용을 입력해 주세요.'); return; }
   if (editingConsultId) {
     const idx = consults.findIndex(x => x.id === editingConsultId);
