@@ -156,6 +156,8 @@
   .c-name { font-size: 17px; font-weight: 800; letter-spacing: -0.3px; }
 
   .pill { font-size: 11px; font-weight: 800; padding: 3.5px 8.5px; border-radius: 8px; }
+  .tel-SKB { background: #EEF2FF; color: #4338CA; }
+  .tel-SKT { background: #FFF7ED; color: #C2410C; }
   .tel-SK브로드밴드 { background: #EEF2FF; color: #4338CA; }
   .tel-KT { background: #FEF2F2; color: #DC2626; }
   .tel-LG\ U\+ { background: #FDF2F8; color: #DB2777; }
@@ -469,7 +471,8 @@
   <div class="chips" id="chips">
     <button class="chip" data-f="미개통" onclick="setFilter('미개통',this)">미개통</button>
     <button class="chip" data-f="개통완료" onclick="setFilter('개통완료',this)">개통완료</button>
-    <button class="chip" data-f="SK브로드밴드" onclick="setFilter('SK브로드밴드',this)">SK브로드밴드</button>
+    <button class="chip" data-f="SKB" onclick="setFilter('SKB',this)">SKB</button>
+    <button class="chip" data-f="SKT" onclick="setFilter('SKT',this)">SKT</button>
     <button class="chip" data-f="KT" onclick="setFilter('KT',this)">KT</button>
     <button class="chip" data-f="LG U+" onclick="setFilter('LG U+',this)">LG U+</button>
     <button class="chip" data-f="스카이라이프" onclick="setFilter('스카이라이프',this)">스카이라이프</button>
@@ -573,13 +576,14 @@
       <summary style="font-size:17px;font-weight:900;color:#0F172A;letter-spacing:-0.2px">3. 인터넷·TV 가입 상품 및 사은품 내역</summary>
       <div class="field"><label>가입통신사</label>
         <div class="seg-chips" id="carrierChips">
-          <button type="button" class="seg-btn on" onclick="pickChip('fCarrier','carrierChips',this)">SK브로드밴드</button>
+          <button type="button" class="seg-btn on" onclick="pickChip('fCarrier','carrierChips',this)">SKB</button>
+          <button type="button" class="seg-btn" onclick="pickChip('fCarrier','carrierChips',this)">SKT</button>
           <button type="button" class="seg-btn" onclick="pickChip('fCarrier','carrierChips',this)">KT</button>
           <button type="button" class="seg-btn" onclick="pickChip('fCarrier','carrierChips',this)">LG U+</button>
           <button type="button" class="seg-btn" onclick="pickChip('fCarrier','carrierChips',this)">스카이라이프</button>
           <button type="button" class="seg-btn" onclick="pickChip('fCarrier','carrierChips',this)">LG헬로비전</button>
         </div>
-        <input type="hidden" id="fCarrier" value="SK브로드밴드">
+        <input type="hidden" id="fCarrier" value="SKB">
       </div>
       <div class="field"><label>상품 유형</label>
         <div class="seg-chips" id="productChips">
@@ -1007,10 +1011,12 @@ function render() {
     if (filter === '만료임박' && !(d !== null && d <= 90 && x.status !== '보류취소')) return false;
     if (filter === '개통완료' && x.status !== '개통완료') return false;
     if (filter === '미개통' && x.status === '개통완료') return false;
-    if (['SK브로드밴드','KT','LG U+','스카이라이프','LG헬로비전'].includes(filter) && x.carrier !== filter) return false;
+    if (filter === 'SKB') { if (!(x.carrier === 'SKB' || x.carrier === 'SK브로드밴드')) return false; }
+    else if (['SKT','KT','LG U+','스카이라이프','LG헬로비전'].includes(filter) && x.carrier !== filter) return false;
     if (filter === '미정산' && (x.settled || x.status === '보류취소')) return false;
     if (q) {
-      const hay = `${x.name} ${x.phone} ${x.carrier} ${x.product} ${x.planName||''} ${x.address||''} ${x.memo}`.toLowerCase();
+      const carrierHay = x.carrier === 'SK브로드밴드' ? 'SKB SK브로드밴드' : (x.carrier || '');
+      const hay = `${x.name} ${x.phone} ${carrierHay} ${x.product} ${x.planName||''} ${x.address||''} ${x.memo}`.toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
@@ -1334,7 +1340,8 @@ function applyPasteFill() {
     else if (k === '자동이체2' || k === '자동이체②' || k === '계좌번호' || k === '카드번호') setVal('fPayDetail2', v);
     else if (k === '사은계좌') setVal('fGiftAccount', v);
     else if (k === '가입통신사' || k === '통신사') {
-      if (/sk/i.test(v)) syncChips('fCarrier', 'carrierChips', 'SK브로드밴드');
+      if (/skt|에스케이티|sk텔레콤/i.test(v)) syncChips('fCarrier', 'carrierChips', 'SKT');
+      else if (/sk|에스케이|브로드밴드/i.test(v)) syncChips('fCarrier', 'carrierChips', 'SKB');
       else if (/kt/i.test(v)) syncChips('fCarrier', 'carrierChips', 'KT');
       else if (/lg\s*u|유플러스|lgu/i.test(v)) syncChips('fCarrier', 'carrierChips', 'LG U+');
       else if (/스카이|sky/i.test(v)) syncChips('fCarrier', 'carrierChips', '스카이라이프');
@@ -1496,7 +1503,7 @@ function openModal(id) {
     document.getElementById('fPayDetail').value = [item.payDetail, item.payDetail2].filter(Boolean).join('\n');
     document.getElementById('fGiftAccount').value = item.giftAccount || '';
 
-    syncChips('fCarrier', 'carrierChips', item.carrier || 'SK브로드밴드');
+    syncChips('fCarrier', 'carrierChips', item.carrier === 'SK브로드밴드' ? 'SKB' : (item.carrier || 'SKB'));
     syncChips('fProduct', 'productChips', item.product || '인터넷+TV');
     document.getElementById('fPlanName').value = item.planName || '';
     document.getElementById('fTermMonths').value = item.termMonths || '36';
@@ -1523,7 +1530,7 @@ function openModal(id) {
     document.getElementById('fStatus').value = '미개통';
     document.getElementById('fSettled').checked = false;
     syncChips('fPayType', 'payTypeChips', '계좌이체');
-    syncChips('fCarrier', 'carrierChips', 'SK브로드밴드');
+    syncChips('fCarrier', 'carrierChips', 'SKB');
     syncChips('fProduct', 'productChips', '인터넷+TV');
     syncChips('fAp', 'apChips', '신청');
     syncChips('fCashPayer', 'cashPayerChips', '유치자 직접지급');
