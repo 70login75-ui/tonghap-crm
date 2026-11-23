@@ -117,6 +117,35 @@
   .mini-a.me { background: #0F172A; }
   .mini-a.cu { background: #E11D48; }
 
+  /* Today / Tomorrow Consult Reservation Banner */
+  .consult-banner {
+    display: none; margin: 14px 0 12px; background: #E8FBF0;
+    border: 1.5px solid #03C75A; border-radius: 16px; padding: 13px 14px;
+    box-shadow: 0 4px 14px rgba(3, 199, 90, 0.10);
+  }
+  .consult-banner.show { display: block; }
+  .cb-hdr { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .cb-hdr b { font-size: 14px; font-weight: 900; color: #009A3E; letter-spacing: -0.4px; }
+  .cb-more {
+    border: none; background: transparent; padding: 2px 0; cursor: pointer;
+    font-size: 12px; font-weight: 800; color: #009A3E; text-decoration: underline;
+  }
+  .cb-item { background: #fff; border: 1px solid #D5F5E3; border-radius: 12px; padding: 10px 12px; margin-top: 8px; }
+  .cb-when { font-size: 14.5px; font-weight: 900; color: #0F172A; letter-spacing: -0.3px; line-height: 1.35; }
+  .cb-when .cb-day { color: #03C75A; }
+  .cb-phone { font-size: 13px; font-weight: 700; color: #475569; }
+  .cb-memo {
+    font-size: 12.5px; color: #64748B; margin-top: 3px; line-height: 1.4;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .cb-btns { display: flex; gap: 6px; justify-content: flex-end; margin-top: 8px; }
+  .cb-btn {
+    border: 1px solid #CBD5E1; background: #fff; color: #334155;
+    border-radius: 10px; padding: 7px 12px; font-size: 12.5px; font-weight: 800; cursor: pointer;
+    white-space: nowrap;
+  }
+  .cb-btn.primary { background: #03C75A; border-color: #03C75A; color: #fff; }
+
   /* Search & Filter */
   .search-box { position: relative; margin-top: 14px; }
   .search-box input {
@@ -462,6 +491,7 @@
 
 <div class="wrap">
   <div class="alert-box" id="alertBanner"></div>
+  <div class="consult-banner" id="consultBanner"></div>
 
   <div class="search-box">
     <span class="ico">🔍</span>
@@ -1004,6 +1034,8 @@ function render() {
     banner.classList.remove('show');
     banner.innerHTML = '';
   }
+
+  renderConsultBanner();
 
   let rows = data.filter(x => {
     const d = dday(x.expDate);
@@ -1683,6 +1715,80 @@ function saveConsultStore() { localStorage.setItem(CONSULT_KEY, JSON.stringify(c
 function updateConsultKpi() {
   const el = document.getElementById('stConsult');
   if (el) el.textContent = consults.length;
+  renderConsultBanner();
+}
+
+function cbPad(n) { return String(n).padStart(2, '0'); }
+
+function renderConsultBanner() {
+  const box = document.getElementById('consultBanner');
+  if (!box) return;
+  const now = new Date();
+  const todayStr = `${now.getFullYear()}-${cbPad(now.getMonth() + 1)}-${cbPad(now.getDate())}`;
+  const tm = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  const tomorrowStr = `${tm.getFullYear()}-${cbPad(tm.getMonth() + 1)}-${cbPad(tm.getDate())}`;
+  const list = (consults || [])
+    .filter(c => c && (c.date === todayStr || c.date === tomorrowStr))
+    .sort((a, b) => (`${a.date} ${a.time || '99:99'}`).localeCompare(`${b.date} ${b.time || '99:99'}`));
+  if (!list.length) {
+    box.classList.remove('show');
+    box.innerHTML = '';
+    return;
+  }
+  const MAX = 3;
+  const shown = list.slice(0, MAX);
+  const rest = list.length - shown.length;
+  const items = shown.map(c => {
+    const dayLabel = c.date === todayStr ? '오늘' : '내일';
+    const memo = (c.memo || '').replace(/\s+/g, ' ').trim();
+    const memoShort = memo.length > 42 ? memo.slice(0, 42) + '…' : memo;
+    return `<div class="cb-item">
+      <div class="cb-when"><span class="cb-day">${dayLabel} ${esc(c.time || '시간 미정')}</span> · ${esc(c.name || '미상 고객')}${c.phone ? ` <span class="cb-phone">(${esc(c.phone)})</span>` : ''}</div>
+      ${memoShort ? `<div class="cb-memo">${esc(memoShort)}</div>` : ''}
+      <div class="cb-btns">
+        <button type="button" class="cb-btn" onclick="viewConsultFromBanner('${c.id}')">예약 보기</button>
+        <button type="button" class="cb-btn primary" onclick="registerFromConsult('${c.id}')">+ 고객 등록</button>
+      </div>
+    </div>`;
+  }).join('');
+  box.innerHTML = `<div class="cb-hdr"><b>📅 오늘·내일 상담 예약 ${list.length}건</b>${
+    rest > 0 ? `<button type="button" class="cb-more" onclick="openConsultModal()">외 ${rest}건 전체 보기</button>` : ''
+  }</div>` + items;
+  box.classList.add('show');
+}
+
+function viewConsultFromBanner(id) {
+  const c = consults.find(x => x.id === id);
+  if (!c) return;
+  if (c.date) {
+    const p = c.date.split('-');
+    if (p.length === 3) { calYear = +p[0]; calMonth = +p[1] - 1; selCalDate = c.date; }
+    const cd = document.getElementById('cDate'); if (cd) cd.value = c.date;
+  }
+  openConsultModal();
+  renderConsultList();
+  openConsultView(id);
+}
+
+function registerFromConsult(id) {
+  const c = consults.find(x => x.id === id);
+  if (!c) return;
+  closeConsultView();
+  closeConsultModal();
+  openModal();
+  document.getElementById('fName').value = (c.name && c.name !== '미상 고객') ? c.name : '';
+  document.getElementById('fPhone').value = c.phone || '';
+  const head = `[상담예약 ${c.date || ''} ${c.time || ''}]`.replace(/\s+/g, ' ').trim();
+  document.getElementById('fMemo').value = (head + '\n' + (c.memo || '')).trim();
+  if (Array.isArray(c.photos) && c.photos.length) {
+    tempPhotos = [...c.photos];
+    renderPreviewPhotos();
+    if (typeof renderCustGallery === 'function') renderCustGallery();
+  }
+  syncModalCall();
+  const sheet = document.querySelector('#modalBg .sheet');
+  if (sheet) sheet.scrollTo({ top: 0, behavior: 'smooth' });
+  showToast('상담 예약 내용을 새 고객 등록에 채웠어요. 확인 후 저장해 주세요.');
 }
 
 function openConsultModal() {
