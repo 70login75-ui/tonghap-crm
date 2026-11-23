@@ -496,6 +496,10 @@
 </div>
 
 <div class="wrap">
+  <div id="pwaInstallBar" style="display:none;margin-bottom:10px;background:#111827;color:#fff;border-radius:12px;padding:10px 14px;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 4px 12px rgba(0,0,0,0.12);">
+    <div style="font-size:12px;font-weight:700;line-height:1.35;">📲 마크 없는 단독 앱으로 설치할 수 있어요</div>
+    <button id="pwaInstallBtn" style="flex-shrink:0;background:#03C75A;color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:800;cursor:pointer;">앱 설치</button>
+  </div>
   <div class="alert-box" id="alertBanner"></div>
   <div class="consult-banner" id="consultBanner"></div>
 
@@ -2447,5 +2451,27 @@ render();
   </div>
 </div>
 
+<script>
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  const bar = document.getElementById('pwaInstallBar');
+  if (bar) bar.style.display = 'flex';
+});
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('pwaInstallBtn');
+  if (btn) {
+    btn.addEventListener('click', async () => {
+      if (!deferredInstallPrompt) return;
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      const bar = document.getElementById('pwaInstallBar');
+      if (bar) bar.style.display = 'none';
+    });
+  }
+});
+</script>
 </body>
 </html>
