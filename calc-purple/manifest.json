@@ -1,0 +1,25 @@
+{
+  "id": "/tonghap-crm/calc-purple/",
+  "name": "통합 통신비서 (퍼플)",
+  "short_name": "통합 통신비서",
+  "description": "인터넷·TV·유심 요금·결합 계산기 (보라 테마)",
+  "start_url": "/tonghap-crm/calc-purple/",
+  "scope": "/tonghap-crm/calc-purple/",
+  "display": "standalone",
+  "background_color": "#8B5CF6",
+  "theme_color": "#8B5CF6",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
