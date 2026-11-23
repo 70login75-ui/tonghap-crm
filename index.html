@@ -479,7 +479,7 @@
       <div class="logo-dot" style="background:#FFFFFF;padding:0;overflow:hidden;"><img src="logo-clover.png" alt="통합 INTERNET" style="width:100%;height:100%;object-fit:contain;border-radius:10px;display:block;"></div>
       <div>
         <div class="brand-txt">통합 <span style="font-size:1.25em;font-weight:900;color:#FFFFFF;letter-spacing:0.3px">INTERNET</span></div>
-        <div class="brand-sub">제작자 손 영 곤 V119</div>
+        <div class="brand-sub">제작자 손 영 곤 V120</div>
       </div>
     </div>
     <div class="hero-actions">
@@ -2418,14 +2418,15 @@ render();
     if (!raw) return;
     localStorage.removeItem('tonghap_calc_to_crm_v1');
     const obj = JSON.parse(raw);
-    openAddModal();
+    openModal();
     if (obj.carrier) syncChips('fCarrier', 'carrierChips', obj.carrier);
     if (obj.product) syncChips('fProduct', 'productChips', obj.product);
     if (obj.planName) document.getElementById('fPlanName').value = obj.planName;
     if (obj.termMonths) document.getElementById('fTermMonths').value = obj.termMonths;
     if (obj.ap) syncChips('fAp', 'apChips', obj.ap);
     if (obj.monthlyFee && Number(obj.monthlyFee) > 0) document.getElementById('fMonthlyFee').value = Number(obj.monthlyFee).toLocaleString('ko-KR');
-    if (obj.installFee && Number(obj.installFee) > 0) document.getElementById('fInstallFee').value = Number(obj.installFee).toLocaleString('ko-KR');
+    const ifNum = Number(String(obj.installFee || '').replace(/[^0-9]/g, ''));
+    if (ifNum > 0) document.getElementById('fInstallFee').value = ifNum.toLocaleString('ko-KR');
     if (obj.gift && Number(obj.gift) > 0) {
       const gStr = Number(obj.gift).toLocaleString('ko-KR');
       document.getElementById('fGift').value = gStr;
