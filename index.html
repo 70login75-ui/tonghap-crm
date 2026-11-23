@@ -479,7 +479,7 @@
       <div class="logo-dot" style="background:#FFFFFF;padding:0;overflow:hidden;"><img src="logo-clover.png" alt="통합 INTERNET" style="width:100%;height:100%;object-fit:contain;border-radius:10px;display:block;"></div>
       <div>
         <div class="brand-txt">통합 <span style="font-size:1.25em;font-weight:900;color:#FFFFFF;letter-spacing:0.3px">INTERNET</span></div>
-        <div class="brand-sub">제작자 손 영 곤 V1.4</div>
+        <div class="brand-sub">제작자 손 영 곤 V1.5</div>
       </div>
     </div>
     <div class="hero-actions">
@@ -2011,11 +2011,12 @@ function openConsultView(id) {
         ${c.photos.map(src => `<img src="${src}" style="width:100%;border-radius:10px;border:1px solid #E2E8F0">`).join('')}
       </div>
     </div>` : '';
-  document.getElementById('cvTitle').textContent = (c.name || '미상 고객') + ' · 상담 예약';
+  const dispName = (c.name && c.name !== '미상 고객') ? c.name : '';
+  document.getElementById('cvTitle').textContent = dispName ? `${dispName} · 상담 예약` : '상담 예약';
   document.getElementById('cvBody').innerHTML = `
     <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:14px;padding:14px;margin-bottom:14px">
       <div class="v-row"><span class="v-k">예약 일시</span><span class="v-v" style="color:#2563EB">${esc(dt)}</span></div>
-      <div class="v-row"><span class="v-k">고객명</span><span class="v-v">${esc(c.name || '미상 고객')}</span></div>
+      <div class="v-row"><span class="v-k">고객명</span><span class="v-v">${esc(dispName || '-')}</span></div>
       <div class="v-row"><span class="v-k">연락처</span><span class="v-v">${esc(c.phone || '-')}</span></div>
       <div style="margin-top:10px;padding-top:10px;border-top:1px solid #E2E8F0">
         <div style="font-size:13px;font-weight:800;color:#475569;margin-bottom:6px">상담 내용</div>
@@ -2058,7 +2059,7 @@ function saveConsultInline(id) {
   const phone = document.getElementById('cvPhone').value.trim();
   const memo = document.getElementById('cvMemo').value.trim();
   if (!name && !memo && !consultPhotos.length) { showToast('고객명, 상담 내용 또는 사진을 입력해 주세요.'); return; }
-  consults[idx] = { ...consults[idx], date, time, name: name || '미상 고객', phone, memo };
+  consults[idx] = { ...consults[idx], date, time, name: name || '', phone, memo };
   saveConsultStore();
   updateConsultKpi();
   renderConsultList();
@@ -2098,7 +2099,7 @@ function saveConsult() {
   if (editingConsultId) {
     const idx = consults.findIndex(x => x.id === editingConsultId);
     if (idx !== -1) {
-      consults[idx] = { ...consults[idx], date, time, name: name || '미상 고객', phone, memo };
+      consults[idx] = { ...consults[idx], date, time, name: name || '', phone, memo };
     }
     saveConsultStore();
     updateConsultKpi();
@@ -2109,7 +2110,7 @@ function saveConsult() {
   }
   consults.unshift({
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-    date, time, name: name || '미상 고객', phone, memo, photos: [...consultPhotos], createdAt: Date.now()
+    date, time, name: name || '', phone, memo, photos: [...consultPhotos], createdAt: Date.now()
   });
   if (date) { const p = date.split('-'); if (p.length===3) { calYear=+p[0]; calMonth=+p[1]-1; selCalDate=date; } }
   saveConsultStore();
@@ -2224,10 +2225,12 @@ function renderConsultList() {
   }
   box.innerHTML = dayRows.map(c => {
     const tel = (c.phone || '').replace(/\D/g, '');
+    const dispName = (c.name && c.name !== '미상 고객') ? c.name : '';
+    const effTime = extractConsultHHMM(c) || c.time || '시간 미정';
     return `<div onclick="openConsultView('${c.id}')" style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:11px 12px;cursor:pointer">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
-        <div style="font-size:14.5px;font-weight:800;color:#0F172A">${esc(c.name)} ${c.phone ? `<span style="font-size:12.5px;color:#475569;font-weight:600">(${esc(c.phone)})</span>` : ''}</div>
-        <span style="font-size:12px;font-weight:700;color:#2563EB">${esc(c.time || '시간 미정')}</span>
+        <div style="font-size:14.5px;font-weight:800;color:#0F172A">${dispName ? esc(dispName) + ' ' : ''}${c.phone ? `<span style="font-size:12.5px;color:#475569;font-weight:600">(${esc(c.phone)})</span>` : ''}</div>
+        <span style="font-size:12px;font-weight:700;color:#2563EB">${esc(effTime)}</span>
       </div>
       ${c.memo ? `<div style="font-size:13.5px;color:#334155;margin-top:6px;white-space:pre-wrap;line-height:1.45">${esc(c.memo)}</div>` : ''}
       ${(c.photos&&c.photos.length)?`<div style="font-size:12.5px;font-weight:700;color:#2563EB;margin-top:5px">📷 첨부 사진 ${c.photos.length}장 (눌러서 보기)</div>`:''}
@@ -2434,7 +2437,7 @@ render();
         id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
         date: obj.date || '',
         time: obj.time || '',
-        name: obj.name || '미상 고객',
+        name: obj.name || '',
         phone: obj.phone || '',
         memo: obj.memo || '',
         createdAt: Date.now()
