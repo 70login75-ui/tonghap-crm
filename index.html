@@ -479,7 +479,7 @@
       <div class="logo-dot" style="background:#FFFFFF;padding:0;overflow:hidden;"><img src="logo-clover.png" alt="통합 INTERNET" style="width:100%;height:100%;object-fit:contain;border-radius:10px;display:block;"></div>
       <div>
         <div class="brand-txt">통합 <span style="font-size:1.25em;font-weight:900;color:#FFFFFF;letter-spacing:0.3px">INTERNET</span></div>
-        <div class="brand-sub">제작자 손 영 곤 V2.4</div>
+        <div class="brand-sub">제작자 손 영 곤 V2.5</div>
       </div>
     </div>
     <div class="hero-actions">
@@ -648,12 +648,12 @@
             <option value="LG헬로비전">LG헬로비전</option>
           </select>
         </div>
-        <div class="field"><label>신청상품 (속도·요금제명)</label><input id="fPlanName" placeholder="예: 500M + 베이직TV"></div>
+        <div class="field"><label>월요금 (원)</label><input id="fMonthlyFee" type="text" inputmode="numeric" placeholder="예: 38,500" oninput="fmtMoneyInput(this)"></div>
       </div>
       <input type="hidden" id="fProduct" value="인터넷+TV">
-      <div class="grid2">
-        <div class="field"><label>약정(개월)</label><input id="fTermMonths" type="number" value="36" placeholder="36"></div>
-        <div class="field"><label>월요금 (원)</label><input id="fMonthlyFee" type="text" inputmode="numeric" placeholder="예: 38,500" oninput="fmtMoneyInput(this)"></div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 92px;gap:8px;align-items:end">
+        <div class="field"><label>신청상품 (인터넷·TV)</label><input id="fPlanName" placeholder="예: 500M + 베이직TV"></div>
+        <div class="field"><label>선택약정</label><input type="text" value="36개월" readonly tabindex="-1" style="background:#F1F5F9;color:#334155;font-weight:700;text-align:center;cursor:default;pointer-events:none"><input id="fTermMonths" type="hidden" value="36"></div>
       </div>
       <div class="field"><label>AP(공유기) 신청여부</label>
         <div class="seg-chips" id="apChips">
