@@ -2917,8 +2917,9 @@ document.addEventListener('DOMContentLoaded', () => {
           if(!confirm(code + " (" + (item.name||"") + ") 코드를 완전히 삭제할까요?")) return;
           const a = await getValidAdminAuth();
           if(!a) return loadAdminData();
-          await fetch(FB_DB + "/codes/" + encodeURIComponent(code) + ".json?auth=" + encodeURIComponent(a.idToken), { method: "DELETE" });
+          await fetch(FB_DB + "/codes/" + encodeURIComponent(code) + "/active.json?auth=" + encodeURIComponent(a.idToken), { method: "PUT", headers: {"Content-Type":"application/json"}, body: "true" });
           await fetch(FB_DB + "/usage/" + encodeURIComponent(code) + ".json?auth=" + encodeURIComponent(a.idToken), { method: "DELETE" });
+          await fetch(FB_DB + "/codes/" + encodeURIComponent(code) + ".json?auth=" + encodeURIComponent(a.idToken), { method: "DELETE" });
           loadAdminData();
         });
         listWrap.appendChild(row);
