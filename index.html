@@ -479,7 +479,7 @@
       <div class="logo-dot" style="background:#FFFFFF;padding:0;overflow:hidden;"><img src="logo-clover.png" alt="통합 INTERNET" style="width:100%;height:100%;object-fit:contain;border-radius:10px;display:block;"></div>
       <div>
         <div class="brand-txt">통합 <span style="font-size:1.25em;font-weight:900;color:#FFFFFF;letter-spacing:0.3px">INTERNET</span></div>
-        <div class="brand-sub">제작자 손 영 곤 V2.3</div>
+        <div class="brand-sub">제작자 손 영 곤 V2.4</div>
       </div>
     </div>
     <div class="hero-actions">
@@ -610,7 +610,7 @@
         <div style="font-size:13.5px;font-weight:900;color:#1D4ED8;margin-bottom:10px">사은품 및 현금지급처</div>
         <div class="grid2">
           <div class="field"><label>상품권</label><input id="fVoucher" placeholder="예: 신세계 10만"></div>
-          <div class="field"><label style="color:#2563EB;font-size:16px;font-weight:900;letter-spacing:-0.2px">고객 총 현금사은품 (원)</label><input id="fGift" type="text" inputmode="numeric" placeholder="예: 500,000" oninput="fmtMoneyInput(this)"></div>
+          <div class="field"><label style="color:#2563EB;font-size:16px;font-weight:900;letter-spacing:-0.2px">총 현금사은품 (원)</label><input id="fGift" type="text" inputmode="numeric" placeholder="예: 500,000" oninput="fmtMoneyInput(this)"></div>
         </div>
         <div class="field" style="margin-bottom:0"><label style="color:#2563EB;font-size:17px;font-weight:900;letter-spacing:-0.2px">현금지급처</label>
           <div id="cashPayerChips" style="display:flex;flex-direction:column;gap:8px">
@@ -1476,7 +1476,7 @@ function openViewModal(id) {
     row('자동이체', [x.payDetail, x.payDetail2].filter(Boolean).join(' / ')),
     row('사은계좌', x.giftAccount),
     row('상품권', x.voucher),
-    x.gift ? row('고객 총 현금사은품', Number(x.gift).toLocaleString('ko-KR') + '원') : ''
+    x.gift ? row('총 현금사은품', Number(x.gift).toLocaleString('ko-KR') + '원') : ''
   ].filter(Boolean).join('');
 
   const sec3 = [
