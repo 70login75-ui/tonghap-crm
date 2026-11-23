@@ -479,7 +479,7 @@
       <div class="logo-dot" style="background:#FFFFFF;padding:0;overflow:hidden;"><img src="logo-clover.png" alt="통합 INTERNET" style="width:100%;height:100%;object-fit:contain;border-radius:10px;display:block;"></div>
       <div>
         <div class="brand-txt">통합 <span style="font-size:1.25em;font-weight:900;color:#FFFFFF;letter-spacing:0.3px">INTERNET</span></div>
-        <div class="brand-sub">제작자 손 영 곤 V1.3</div>
+        <div class="brand-sub">제작자 손 영 곤 V1.4</div>
       </div>
     </div>
     <div class="hero-actions">
@@ -1748,6 +1748,29 @@ function dismissConsultBanner(id) {
   renderConsultBanner();
 }
 
+function extractConsultHHMM(c) {
+  if (c && c.time && /^\d{2}:\d{2}$/.test(c.time)) return c.time;
+  const txt = `${(c && c.memo) || ''} ${(c && c.name) || ''}`;
+  let m = txt.match(/(오전|오후|새벽|아침|점심|저녁|밤)?\s*(\d{1,2})\s*시\s*(?:(\d{1,2})\s*분?|반)?/);
+  if (m) {
+    const ap = m[1] || '';
+    let h = parseInt(m[2], 10);
+    const min = m[3] ? parseInt(m[3], 10) : (m[0].includes('반') ? 30 : 0);
+    if (h >= 0 && h <= 23 && min >= 0 && min <= 59) {
+      if ((ap === '오후' || ap === '저녁' || ap === '밤') && h < 12) h += 12;
+      else if ((ap === '오전' || ap === '새벽' || ap === '아침') && h === 12) h = 0;
+      else if (ap === '점심' && h >= 1 && h <= 11) h += 12;
+      return `${cbPad(h)}:${cbPad(min)}`;
+    }
+  }
+  m = txt.match(/\b(\d{1,2}):(\d{2})\b/);
+  if (m) {
+    const h = parseInt(m[1], 10), min = parseInt(m[2], 10);
+    if (h >= 0 && h <= 23 && min >= 0 && min <= 59) return `${cbPad(h)}:${cbPad(min)}`;
+  }
+  return '';
+}
+
 function renderConsultBanner() {
   const box = document.getElementById('consultBanner');
   if (!box) return;
@@ -1761,12 +1784,13 @@ function renderConsultBanner() {
     .filter(c => {
       if (!isNamedConsult(c) || dismissed.includes(cbDismissKey(c))) return false;
       if (c.date === todayStr) {
-        if (c.time && /^\d{2}:\d{2}$/.test(c.time) && c.time < nowHHMM) return false;
+        const effTime = extractConsultHHMM(c);
+        if (effTime && effTime < nowHHMM) return false;
         return true;
       }
       return c.date === tomorrowStr;
     })
-    .sort((a, b) => (`${a.date} ${a.time || '99:99'}`).localeCompare(`${b.date} ${b.time || '99:99'}`));
+    .sort((a, b) => (`${a.date} ${extractConsultHHMM(a) || '99:99'}`).localeCompare(`${b.date} ${extractConsultHHMM(b) || '99:99'}`));
   if (!list.length) {
     box.classList.remove('show');
     box.innerHTML = '';
@@ -1777,11 +1801,12 @@ function renderConsultBanner() {
   const rest = list.length - shown.length;
   const items = shown.map(c => {
     const dayLabel = c.date === todayStr ? '오늘' : '내일';
+    const effTime = extractConsultHHMM(c);
     const memo = (c.memo || '').replace(/\s+/g, ' ').trim();
     const memoShort = memo.length > 42 ? memo.slice(0, 42) + '…' : memo;
     return `<div class="cb-item">
       <button type="button" class="cb-x" aria-label="알림 닫기" onclick="dismissConsultBanner('${c.id}')">✕</button>
-      <div class="cb-when"><span class="cb-day">${dayLabel} ${esc(c.time || '시간 미정')}</span> · ${esc(c.name || '미상 고객')}${c.phone ? ` <span class="cb-phone">(${esc(c.phone)})</span>` : ''}</div>
+      <div class="cb-when"><span class="cb-day">${dayLabel} ${esc(effTime || '시간 미정')}</span> · ${esc(c.name || '미상 고객')}${c.phone ? ` <span class="cb-phone">(${esc(c.phone)})</span>` : ''}</div>
       ${memoShort ? `<div class="cb-memo">${esc(memoShort)}</div>` : ''}
       <div class="cb-btns">
         <button type="button" class="cb-btn" onclick="viewConsultFromBanner('${c.id}')">예약 보기</button>
