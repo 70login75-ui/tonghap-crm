@@ -1,4 +1,4 @@
-const CACHE = 'tonghap-crm-v1.2';
+const CACHE = 'tonghap-crm-v1.3';
 self.addEventListener('install', e => {
   self.skipWaiting();
 });
