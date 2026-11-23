@@ -479,7 +479,7 @@
       <div class="logo-dot" style="background:#FFFFFF;padding:0;overflow:hidden;"><img src="logo-clover.png" alt="통합 INTERNET" style="width:100%;height:100%;object-fit:contain;border-radius:10px;display:block;"></div>
       <div>
         <div class="brand-txt">통합 <span style="font-size:1.25em;font-weight:900;color:#FFFFFF;letter-spacing:0.3px">INTERNET</span></div>
-        <div class="brand-sub">제작자 손 영 곤 V113</div>
+        <div class="brand-sub">제작자 손 영 곤 V114</div>
       </div>
     </div>
     <div class="hero-actions">
@@ -1726,6 +1726,19 @@ function updateConsultKpi() {
 
 function cbPad(n) { return String(n).padStart(2, '0'); }
 
+var CB_DISMISSED_KEY = 'tonghap_crm_cb_dismissed_v1';
+function cbDismissKey(c) { return `${c.id}|${c.date||''}|${c.time||''}`; }
+function getDismissedCb() { try { return JSON.parse(localStorage.getItem(CB_DISMISSED_KEY) || '[]'); } catch { return []; } }
+function dismissConsultBanner(id) {
+  const c = consults.find(x => x.id === id);
+  if (!c) return;
+  const arr = getDismissedCb();
+  const k = cbDismissKey(c);
+  if (!arr.includes(k)) arr.push(k);
+  localStorage.setItem(CB_DISMISSED_KEY, JSON.stringify(arr));
+  renderConsultBanner();
+}
+
 function renderConsultBanner() {
   const box = document.getElementById('consultBanner');
   if (!box) return;
@@ -1733,18 +1746,6 @@ function renderConsultBanner() {
   const todayStr = `${now.getFullYear()}-${cbPad(now.getMonth() + 1)}-${cbPad(now.getDate())}`;
   const tm = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
   const tomorrowStr = `${tm.getFullYear()}-${cbPad(tm.getMonth() + 1)}-${cbPad(tm.getDate())}`;
-  var CB_DISMISSED_KEY = 'tonghap_crm_cb_dismissed_v1';
-  function cbDismissKey(c) { return `${c.id}|${c.date||''}|${c.time||''}`; }
-  function getDismissedCb() { try { return JSON.parse(localStorage.getItem(CB_DISMISSED_KEY) || '[]'); } catch { return []; } }
-  function dismissConsultBanner(id) {
-    const c = consults.find(x => x.id === id);
-    if (!c) return;
-    const arr = getDismissedCb();
-    const k = cbDismissKey(c);
-    if (!arr.includes(k)) arr.push(k);
-    localStorage.setItem(CB_DISMISSED_KEY, JSON.stringify(arr));
-    renderConsultBanner();
-  }
   const dismissed = getDismissedCb();
   const list = (consults || [])
     .filter(c => c && (c.date === todayStr || c.date === tomorrowStr) && !dismissed.includes(cbDismissKey(c)))
