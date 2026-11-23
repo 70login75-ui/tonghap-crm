@@ -479,7 +479,7 @@
       <div class="logo-dot" style="background:#FFFFFF;padding:0;overflow:hidden;"><img src="logo-clover.png" alt="통합 INTERNET" style="width:100%;height:100%;object-fit:contain;border-radius:10px;display:block;"></div>
       <div>
         <div class="brand-txt">통합 <span style="font-size:1.25em;font-weight:900;color:#FFFFFF;letter-spacing:0.3px">INTERNET</span></div>
-        <div class="brand-sub">제작자 손 영 곤 V2.5</div>
+        <div class="brand-sub">제작자 손 영 곤 V2.6</div>
       </div>
     </div>
     <div class="hero-actions">
@@ -563,30 +563,6 @@
         <input id="fPhone" type="tel" placeholder="010-1234-5678" oninput="fmtPhoneInput(this)" style="padding:11px 9px">
       </div>
     </div>
-    <div class="grid2">
-      <div class="field">
-        <label>진행 상태</label>
-        <select id="fStatus">
-          <option value="미개통" selected>미개통</option>
-          <option value="개통완료">개통완료</option>
-          <option value="보류취소">보류/취소</option>
-        </select>
-      </div>
-      <div class="field"><label>내 수수료 (원)</label><input id="fFee" type="text" inputmode="numeric" placeholder="예: 250,000" oninput="fmtMoneyInput(this)"></div>
-    </div>
-    <div class="grid2">
-      <div class="field"><label>개통일 (자동 +3년)</label>
-        <div class="date-row">
-          <input id="fOpenDate" type="date" onchange="autoExpiry()">
-          <button type="button" class="today-btn" onclick="setTodayOpen()">오늘</button>
-        </div>
-      </div>
-      <div class="field"><label>약정 만료일</label><input id="fExpDate" type="date"></div>
-    </div>
-    <div class="chk-row">
-      <input type="checkbox" id="fSettled">
-      <label for="fSettled">수수료 정산 완료</label>
-    </div>
 
     <details class="form-acc" open>
       <summary style="font-size:17px;font-weight:900;color:#0F172A;letter-spacing:-0.2px">2. 고객 및 청구·결제 정보</summary>
@@ -633,6 +609,31 @@
         </div>
       </div>
     </details>
+
+    <div class="grid2">
+      <div class="field">
+        <label>진행 상태</label>
+        <select id="fStatus">
+          <option value="미개통" selected>미개통</option>
+          <option value="개통완료">개통완료</option>
+          <option value="보류취소">보류/취소</option>
+        </select>
+      </div>
+      <div class="field"><label>내 수수료 (원)</label><input id="fFee" type="text" inputmode="numeric" placeholder="예: 250,000" oninput="fmtMoneyInput(this)"></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>개통일 (자동 +3년)</label>
+        <div class="date-row">
+          <input id="fOpenDate" type="date" onchange="autoExpiry()">
+          <button type="button" class="today-btn" onclick="setTodayOpen()">오늘</button>
+        </div>
+      </div>
+      <div class="field"><label>약정 만료일</label><input id="fExpDate" type="date"></div>
+    </div>
+    <div class="chk-row">
+      <input type="checkbox" id="fSettled">
+      <label for="fSettled">수수료 정산 완료</label>
+    </div>
 
     <details class="form-acc" open>
       <summary style="font-size:17px;font-weight:900;color:#0F172A;letter-spacing:-0.2px">3. 인터넷·TV 가입상품</summary>
