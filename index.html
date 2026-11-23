@@ -2487,7 +2487,8 @@ document.addEventListener('DOMContentLoaded', () => {
 .th-gate-btn.primary{background:#6d28d9}
 .th-gate-err{font-size:12.5px;color:#dc2626;font-weight:700;margin:8px 0 0;min-height:18px}
 .th-gate-toggle{margin-top:14px;text-align:center;font-size:12.5px;color:#64748b;cursor:pointer;text-decoration:underline;background:none;border:none;width:100%;padding:4px}
-#thAdminFab{position:fixed;right:10px;top:10px;z-index:9500;background:#111827;color:#fff;border:1.5px solid rgba(255,255,255,.25);border-radius:999px;padding:7px 11px;font-size:11.5px;font-weight:800;box-shadow:0 4px 14px rgba(0,0,0,.28);cursor:pointer;display:none;align-items:center;gap:5px;font-family:inherit}
+#thAdminFab{position:fixed;right:10px;top:10px;z-index:9500;background:#111827;color:#fff;border:1.5px solid rgba(255,255,255,.3);border-radius:999px;padding:5px 10px;font-size:11px;font-weight:800;box-shadow:0 3px 10px rgba(0,0,0,.22);cursor:pointer;display:none;align-items:center;gap:4px;font-family:inherit;white-space:nowrap}
+#thAdminFab.in-header{position:static;z-index:auto}
 #thAdminFab.show{display:inline-flex}
 #thAdminModal{position:fixed;inset:0;z-index:99998;background:rgba(15,23,42,.72);display:none;align-items:center;justify-content:center;padding:14px;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif}
 #thAdminModal.open{display:flex}
@@ -2724,7 +2725,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const adm = await getValidAdminAuth();
     if(adm){
       hideGate();
+      (function(){
       admFab.classList.add("show");
+      const vp = document.querySelector(".ver-pill");
+      const ha = document.querySelector(".hero-actions");
+      if(vp && vp.parentElement && !vp.parentElement.classList.contains("th-hdr-right")){
+        const w = document.createElement("div");
+        w.className = "th-hdr-right";
+        w.style.cssText = "display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;";
+        vp.parentElement.insertBefore(w, vp);
+        admFab.classList.add("in-header");
+        w.appendChild(admFab);
+        w.appendChild(vp);
+      } else if(ha && ha.parentElement && !ha.parentElement.classList.contains("th-hdr-right")){
+        const w = document.createElement("div");
+        w.className = "th-hdr-right";
+        w.style.cssText = "display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;";
+        ha.parentElement.insertBefore(w, ha);
+        admFab.classList.add("in-header");
+        w.appendChild(admFab);
+        w.appendChild(ha);
+      }
+    })();
       return;
     }
     const saved = localStorage.getItem(LS_CODE);
@@ -2790,7 +2812,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }));
         admPass.value = "";
         hideGate();
-        admFab.classList.add("show");
+        (function(){
+      admFab.classList.add("show");
+      const vp = document.querySelector(".ver-pill");
+      const ha = document.querySelector(".hero-actions");
+      if(vp && vp.parentElement && !vp.parentElement.classList.contains("th-hdr-right")){
+        const w = document.createElement("div");
+        w.className = "th-hdr-right";
+        w.style.cssText = "display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;";
+        vp.parentElement.insertBefore(w, vp);
+        admFab.classList.add("in-header");
+        w.appendChild(admFab);
+        w.appendChild(vp);
+      } else if(ha && ha.parentElement && !ha.parentElement.classList.contains("th-hdr-right")){
+        const w = document.createElement("div");
+        w.className = "th-hdr-right";
+        w.style.cssText = "display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;";
+        ha.parentElement.insertBefore(w, ha);
+        admFab.classList.add("in-header");
+        w.appendChild(admFab);
+        w.appendChild(ha);
+      }
+    })();
       }
     }catch(e){
       admLoginErr.textContent = "로그인 요청 중 오류가 발생했습니다.";
