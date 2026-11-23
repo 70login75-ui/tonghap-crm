@@ -479,7 +479,7 @@
       <div class="logo-dot" style="background:#FFFFFF;padding:0;overflow:hidden;"><img src="logo-clover.png" alt="통합 INTERNET" style="width:100%;height:100%;object-fit:contain;border-radius:10px;display:block;"></div>
       <div>
         <div class="brand-txt">통합 <span style="font-size:1.25em;font-weight:900;color:#FFFFFF;letter-spacing:0.3px">INTERNET</span></div>
-        <div class="brand-sub">제작자 손 영 곤 V2.1</div>
+        <div class="brand-sub">제작자 손 영 곤 V2.2</div>
       </div>
     </div>
     <div class="hero-actions">
@@ -606,6 +606,32 @@
       <div class="field"><label style="color:#2563EB">사은계좌 (유치자 지급은 미기재)</label>
         <input id="fGiftAccount" placeholder="웨이브넷 지급 시에만 기재">
       </div>
+      <div style="background:#EFF6FF;border:1.5px solid #93C5FD;border-radius:14px;padding:12px;margin-top:6px">
+        <div style="font-size:13.5px;font-weight:900;color:#1D4ED8;margin-bottom:10px">사은품 및 현금지급처</div>
+        <div class="grid2">
+          <div class="field"><label>상품권</label><input id="fVoucher" placeholder="예: 신세계 10만"></div>
+          <div class="field"><label style="color:#2563EB;font-size:16px;font-weight:900;letter-spacing:-0.2px">고객 총 현금사은품 (원)</label><input id="fGift" type="text" inputmode="numeric" placeholder="예: 500,000" oninput="fmtMoneyInput(this)"></div>
+        </div>
+        <div class="field" style="margin-bottom:0"><label style="color:#2563EB;font-size:17px;font-weight:900;letter-spacing:-0.2px">현금지급처</label>
+          <div id="cashPayerChips" style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:grid;grid-template-columns:138px minmax(0,1fr);gap:8px;align-items:center">
+              <button type="button" class="seg-btn" onclick="pickChip('fCashPayer','cashPayerChips',this)" style="width:100%;padding:11px 6px;font-size:13.5px">웨이브넷 지급</button>
+              <div style="display:flex;align-items:center;gap:4px">
+                <input id="fCashWaveAmt" type="text" inputmode="numeric" placeholder="예: 200,000" oninput="fmtMoneyInput(this)">
+                <span style="font-size:14.5px;font-weight:800;color:#475569;flex-shrink:0">원</span>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:138px minmax(0,1fr);gap:8px;align-items:center">
+              <button type="button" class="seg-btn on" onclick="pickChip('fCashPayer','cashPayerChips',this)" style="width:100%;padding:11px 6px;font-size:13.5px">유치자 직접지급</button>
+              <div style="display:flex;align-items:center;gap:4px">
+                <input id="fCashDirectAmt" type="text" inputmode="numeric" placeholder="예: 300,000" oninput="fmtMoneyInput(this)">
+                <span style="font-size:14.5px;font-weight:800;color:#475569;flex-shrink:0">원</span>
+              </div>
+            </div>
+          </div>
+          <input type="hidden" id="fCashPayer" value="유치자 직접지급">
+        </div>
+      </div>
     </details>
 
     <details class="form-acc" open>
@@ -647,32 +673,6 @@
       <div class="grid2">
         <div class="field"><label>설치희망일</label><input id="fInstallWish" type="date"></div>
         <div class="field"><label>설치비·기사출동비 (원)</label><input id="fInstallFee" type="text" inputmode="numeric" placeholder="예: 36,300" oninput="fmtMoneyInput(this)"></div>
-      </div>
-      <div style="background:#EFF6FF;border:1.5px solid #93C5FD;border-radius:14px;padding:12px;margin-top:6px">
-        <div style="font-size:13.5px;font-weight:900;color:#1D4ED8;margin-bottom:10px">사은품 및 현금지급처</div>
-        <div class="grid2">
-          <div class="field"><label>상품권</label><input id="fVoucher" placeholder="예: 신세계 10만"></div>
-          <div class="field"><label style="color:#2563EB;font-size:16px;font-weight:900;letter-spacing:-0.2px">고객 총 현금사은품 (원)</label><input id="fGift" type="text" inputmode="numeric" placeholder="예: 500,000" oninput="fmtMoneyInput(this)"></div>
-        </div>
-        <div class="field" style="margin-bottom:0"><label style="color:#2563EB;font-size:17px;font-weight:900;letter-spacing:-0.2px">현금지급처</label>
-          <div id="cashPayerChips" style="display:flex;flex-direction:column;gap:8px">
-            <div style="display:grid;grid-template-columns:138px minmax(0,1fr);gap:8px;align-items:center">
-              <button type="button" class="seg-btn" onclick="pickChip('fCashPayer','cashPayerChips',this)" style="width:100%;padding:11px 6px;font-size:13.5px">웨이브넷 지급</button>
-              <div style="display:flex;align-items:center;gap:4px">
-                <input id="fCashWaveAmt" type="text" inputmode="numeric" placeholder="예: 200,000" oninput="fmtMoneyInput(this)">
-                <span style="font-size:14.5px;font-weight:800;color:#475569;flex-shrink:0">원</span>
-              </div>
-            </div>
-            <div style="display:grid;grid-template-columns:138px minmax(0,1fr);gap:8px;align-items:center">
-              <button type="button" class="seg-btn on" onclick="pickChip('fCashPayer','cashPayerChips',this)" style="width:100%;padding:11px 6px;font-size:13.5px">유치자 직접지급</button>
-              <div style="display:flex;align-items:center;gap:4px">
-                <input id="fCashDirectAmt" type="text" inputmode="numeric" placeholder="예: 300,000" oninput="fmtMoneyInput(this)">
-                <span style="font-size:14.5px;font-weight:800;color:#475569;flex-shrink:0">원</span>
-              </div>
-            </div>
-          </div>
-          <input type="hidden" id="fCashPayer" value="유치자 직접지급">
-        </div>
       </div>
     </details>
 
