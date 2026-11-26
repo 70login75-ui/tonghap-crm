@@ -258,6 +258,19 @@
   .act:active { background: #F1F5F9; }
   .act.call { background: var(--green-soft); color: #047857; border-color: #A7F3D0; }
   .act.sms { background: var(--blue-soft); color: var(--blue); border-color: #BFDBFE; }
+  /* 고객 카드 보관사진 버튼 */
+  .act.gal {
+    grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: 7px;
+    background: #EEF2FF; color: #4338CA; border-color: #C7D2FE; padding: 9px 8px; font-size: 13px;
+  }
+  .act.gal .gal-n { font-size: 13px; font-weight: 800; color: #3730A3; }
+  .act.gal:disabled { background: #F8FAFC; color: #94A3B8; border-color: #E2E8F0; cursor: default; }
+  .act.gal:disabled .gal-n { color: #94A3B8; }
+  /* 보관사진 모달 */
+  #custPhotoBg .sheet-hdr h2 { font-size: 17px; line-height: 1.3; flex: 1; min-width: 0; word-break: keep-all; padding-right: 8px; }
+  .cust-photo-item { background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; overflow: hidden; }
+  .cust-photo-item img { width: 100%; height: 150px; object-fit: cover; display: block; cursor: pointer; }
+  .cust-photo-item .cap { padding: 6px 9px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 700; color: #475569; }
 
   .empty { text-align: center; padding: 56px 20px; color: var(--muted); font-size: 14px; line-height: 1.6; }
 
@@ -500,7 +513,7 @@
       <div class="logo-dot" style="background:#FFFFFF;padding:0;overflow:hidden;"><img src="logo-clover.png" alt="통합 INTERNET" style="width:100%;height:100%;object-fit:contain;border-radius:10px;display:block;"></div>
       <div>
         <div class="brand-txt">통합 <span style="font-size:1.25em;font-weight:900;color:#FFFFFF;letter-spacing:0.3px">INTERNET</span></div>
-        <div class="brand-sub">제작자 손 영 곤 V3.1</div>
+        <div class="brand-sub">제작자 손 영 곤 V3.2</div>
       </div>
     </div>
     <div class="hero-actions">
@@ -1187,6 +1200,7 @@ function render() {
           <a class="act sms" href="sms:${cleanPhone}">💬 문자</a>
           ${x.expDate ? `<button class="act" onclick="downloadICS('${x.id}')">📅 알림</button>` : `<button class="act" disabled style="opacity:.4">📅 알림</button>`}
           <button class="act" onclick="openModal('${x.id}')">✏️ 수정</button>
+          ${galBtn(x)}
         </div>
       </div>
     `;
@@ -1274,6 +1288,25 @@ async function handlePhotos(e) {
   }
 }
 
+function galBtn(x) {
+  const n = (x.photos || []).length;
+  if (!n) return `<button class="act gal" disabled title="보관된 사진이 없어요">📁 보관사진 <span class="gal-n">(0장)</span></button>`;
+  return `<button class="act gal" onclick="openCustomerPhotos('${x.id}')" title="${esc(x.name)} 님의 보관사진 보기">📁 보관사진 <span class="gal-n">(${n}장)</span></button>`;
+}
+function openCustomerPhotos(id) {
+  const c = loadData().find(v => v.id === id);
+  if (!c) return;
+  const photos = c.photos || [];
+  document.getElementById('custPhotoTitle').textContent = `📁 ${c.name} 님 보관사진 (${photos.length}장)`;
+  document.getElementById('custPhotoSub').textContent = `${c.carrier} · ${c.product} · 사진을 누르면 크게 볼 수 있어요`;
+  document.getElementById('custPhotoGrid').innerHTML = photos.map((src, i) => `
+    <div class="cust-photo-item">
+      <img src="${src}" onclick="openLightbox(this.src)" alt="${esc(c.name)} 님 보관사진 ${i + 1}">
+      <div class="cap"><span>사진 ${i + 1}</span><span style="color:#94A3B8">크게 보기</span></div>
+    </div>`).join('');
+  document.getElementById('custPhotoBg').classList.add('open');
+}
+function closeCustomerPhotos() { document.getElementById('custPhotoBg').classList.remove('open'); }
 function openLightbox(src) { document.getElementById('lbImg').src = src; document.getElementById('lightbox').classList.add('open'); }
 function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
 function openDataModal() { document.getElementById('dataBg').classList.add('open'); }
@@ -2661,6 +2694,21 @@ render();
     <div style="font-size:13px;color:#64748B;font-weight:700;margin-bottom:10px">사진을 누르면 크게 볼 수 있어요</div>
     <div id="custGalleryGrid" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:14px"></div>
     <button type="button" class="btn-save" style="width:100%;padding:13px;font-size:15px;font-weight:800" onclick="closeCustGallery()">닫기</button>
+  </div>
+</div>
+
+<!-- Customer Stored Photos Modal (보관사진 전용 모달) -->
+<div class="modal-bg" id="custPhotoBg" onclick="if(event.target===this)closeCustomerPhotos()">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-hdr">
+      <h2 id="custPhotoTitle">📁 보관사진</h2>
+      <button class="close-x" onclick="closeCustomerPhotos()" aria-label="닫기">✕</button>
+    </div>
+    <div id="custPhotoSub" style="font-size:13px;color:#64748B;font-weight:700;margin:-4px 0 12px;line-height:1.45">사진을 누르면 크게 볼 수 있어요</div>
+    <div id="custPhotoGrid" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:12px"></div>
+    <div style="font-size:12px;color:#94A3B8;font-weight:700;text-align:center;margin-bottom:10px">사진 추가·삭제는 ✏️ 수정에서 할 수 있어요</div>
+    <button type="button" class="btn-save" style="width:100%;padding:13px;font-size:15px;font-weight:800" onclick="closeCustomerPhotos()">닫기</button>
   </div>
 </div>
 
