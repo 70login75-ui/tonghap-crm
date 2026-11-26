@@ -239,10 +239,26 @@
   .settle-yes { background: var(--green-soft); color: #047857; }
   .settle-no { background: #FEF3C7; color: #B45309; }
 
-  .memo {
-    margin-top: 9px; padding: 9px 11px; background: #F8FAFC; border-radius: 10px;
-    font-size: 12.5px; color: #475569; line-height: 1.45; white-space: pre-wrap;
+  /* 고객 카드 📝 메모 미리보기 박스 (연한 파랑 배경 + 파란 글씨) */
+  .memo-box {
+    margin-top: 9px; padding: 7px 10px 8px; background: #EFF6FF;
+    border: 1px solid #BFDBFE; border-radius: 10px;
   }
+  .memo-hd { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 2px; }
+  .memo-tag { font-size: 11.5px; font-weight: 800; color: #1E40AF; letter-spacing: -0.2px; line-height: 1.4; }
+  .memo-more {
+    flex: 0 0 auto; white-space: nowrap; border: 0; background: none; padding: 1px 2px;
+    color: #1D4ED8; font-size: 11.5px; font-weight: 800; cursor: pointer; font-family: inherit;
+    text-decoration: underline; text-underline-offset: 2px; line-height: 1.4;
+  }
+  .memo-more:active { opacity: .6; }
+  .memo-text {
+    font-size: 12.5px; color: #1D4ED8; line-height: 1.5; white-space: pre-wrap;
+    word-break: break-word; overflow-wrap: anywhere;
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden;
+  }
+  .memo-box.open .memo-text { display: block; -webkit-line-clamp: unset; overflow: visible; }
+  .memo-text mark.memo-hl { background: #FDE68A; color: #1E3A8A; font-weight: 800; border-radius: 3px; padding: 0 1px; }
   .photo-strip { display: flex; gap: 8px; overflow-x: auto; margin-top: 10px; padding-bottom: 2px; }
   .photo-strip img {
     width: 64px; height: 64px; object-fit: cover; border-radius: 11px;
@@ -513,7 +529,7 @@
       <div class="logo-dot" style="background:#FFFFFF;padding:0;overflow:hidden;"><img src="logo-clover.png" alt="통합 INTERNET" style="width:100%;height:100%;object-fit:contain;border-radius:10px;display:block;"></div>
       <div>
         <div class="brand-txt">통합 <span style="font-size:1.25em;font-weight:900;color:#FFFFFF;letter-spacing:0.3px">INTERNET</span></div>
-        <div class="brand-sub">제작자 손 영 곤 V3.4</div>
+        <div class="brand-sub">제작자 손 영 곤 V3.5</div>
       </div>
     </div>
     <div class="hero-actions">
@@ -1127,6 +1143,7 @@ function toggleSettle(id) {
 function render() {
   const data = loadData();
   const q = document.getElementById('q').value.trim().toLowerCase();
+  if (q !== memoQuery) { memoQuery = q; collapsedMemos.clear(); }
   const sortBy = document.getElementById('sortBy').value;
 
   document.getElementById('stTotal').textContent = data.length;
@@ -1178,7 +1195,8 @@ function render() {
     if (filter === '미정산' && (x.settled || x.status === '보류취소')) return false;
     if (q) {
       const carrierHay = x.carrier === 'SK브로드밴드' ? 'SKB SK브로드밴드' : (x.carrier || '');
-      const hay = `${x.name} ${x.phone} ${carrierHay} ${x.product} ${x.planName||''} ${x.address||''} ${x.memo}`.toLowerCase();
+      const phoneDigits = String(x.phone || '').replace(/[^0-9]/g, '');
+      const hay = `${x.name} ${x.phone} ${phoneDigits} ${carrierHay} ${x.product} ${x.planName||''} ${x.address||''} ${x.memo}`.toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
@@ -1258,7 +1276,7 @@ function render() {
             </button>
           </div>
         ` : ''}
-        ${x.memo ? `<div class="memo">${esc(x.memo)}</div>` : ''}
+        ${memoBox(x, q)}
         ${photosHtml}
         <div class="actions">
           <a class="act call" href="tel:${cleanPhone}">📞 전화</a>
@@ -1270,6 +1288,7 @@ function render() {
       </div>
     `;
   }).join('');
+  syncMemoMore();
 }
 
 function autoExpiry() {
@@ -1352,6 +1371,57 @@ async function handlePhotos(e) {
     showToast(`📁 갤러리 보관함에 ${files.length}장 저장됨`);
   }
 }
+
+// ── 📝 메모 미리보기 (검색 결과 카드에서 메모를 바로 읽기) ──
+const openMemos = new Set();
+const collapsedMemos = new Set();
+let memoQuery = '';
+
+function hlMemo(text, q) {
+  const t = String(text || '');
+  if (!q) return esc(t);
+  const re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+  return t.split(re).map((part, i) => (i % 2 ? `<mark class="memo-hl">${esc(part)}</mark>` : esc(part))).join('');
+}
+
+function memoBox(x, q) {
+  if (!x.memo || !String(x.memo).trim()) return '';
+  const open = openMemos.has(x.id);
+  const hit = q && !collapsedMemos.has(x.id) && String(x.memo).toLowerCase().includes(String(q).toLowerCase());
+  return `<div class="memo-box${open ? ' open' : ''}" id="memo-${x.id}" data-hit="${hit ? 1 : 0}">
+    <div class="memo-hd">
+      <span class="memo-tag">📝 메모</span>
+      <button type="button" class="memo-more" onclick="toggleMemo('${x.id}')">더보기 ▾</button>
+    </div>
+    <div class="memo-text">${hlMemo(x.memo, q)}</div>
+  </div>`;
+}
+
+function toggleMemo(id) {
+  const box = document.getElementById('memo-' + id);
+  if (!box) return;
+  const isOpen = box.classList.toggle('open');
+  if (isOpen) { openMemos.add(id); }
+  else { openMemos.delete(id); collapsedMemos.add(id); box.dataset.hit = '0'; }  // 접기: 검색 중에도 다시 펼치지 않음
+  syncMemoMore();
+}
+
+function syncMemoMore() {
+  document.querySelectorAll('.memo-box').forEach(box => {
+    const t = box.querySelector('.memo-text');
+    const btn = box.querySelector('.memo-more');
+    if (!t || !btn) return;
+    // 검색어가 메모 안에 있는데 3줄 밖으로 잘렸으면 → 접힌 채로 두지 않고 펼쳐서 보여준다
+    if (!box.classList.contains('open') && box.dataset.hit === '1' && t.scrollHeight > t.clientHeight + 2) {
+      box.classList.add('open');
+    }
+    if (box.classList.contains('open')) { btn.textContent = '접기 ▴'; btn.style.display = ''; return; }
+    btn.textContent = '더보기 ▾';
+    btn.style.display = (t.scrollHeight > t.clientHeight + 2) ? '' : 'none';
+  });
+}
+
+window.addEventListener('resize', () => { try { syncMemoMore(); } catch (e) {} });
 
 function galBtn(x) {
   const n = (x.photos || []).length;
