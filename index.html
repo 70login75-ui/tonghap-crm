@@ -326,6 +326,10 @@
   .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--blue); background: #fff; }
   #modalBg .field input, #modalBg .field select, #modalBg .field textarea { border: 1.5px solid #86EFAC; }
   #modalBg .field input:focus, #modalBg .field select:focus, #modalBg .field textarea:focus { border-color: #16A34A; background: #fff; }
+  /* V3.6: 새 고객 등록/수정 모달 입력 글씨 파란색 (placeholder 안내문구는 회색 유지,
+     날짜 칸은 달력에서 고르는 값이라 빈 칸(mm/dd/yyyy)이 입력된 것처럼 보이지 않게 기본색 유지) */
+  #modalBg .field input:not([type="date"]), #modalBg .field select, #modalBg .field textarea { color: #1D4ED8; }
+  #modalBg .field input::placeholder, #modalBg .field textarea::placeholder { color: #94A3B8; opacity: 1; }
   #modalBg .seg-btn { border: 1.5px solid #86EFAC; }
   #modalBg .seg-btn.on { border-color: #16A34A; }
   #modalBg .modal-head { margin-bottom: 8px; padding-bottom: 6px; }
@@ -529,7 +533,7 @@
       <div class="logo-dot" style="background:#FFFFFF;padding:0;overflow:hidden;"><img src="logo-clover.png" alt="통합 INTERNET" style="width:100%;height:100%;object-fit:contain;border-radius:10px;display:block;"></div>
       <div>
         <div class="brand-txt">통합 <span style="font-size:1.25em;font-weight:900;color:#FFFFFF;letter-spacing:0.3px">INTERNET</span></div>
-        <div class="brand-sub">제작자 손 영 곤 V3.5</div>
+        <div class="brand-sub">제작자 손 영 곤 V3.6</div>
       </div>
     </div>
     <div class="hero-actions">
